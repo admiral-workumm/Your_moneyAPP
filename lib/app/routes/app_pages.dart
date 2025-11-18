@@ -10,6 +10,7 @@ import 'package:your_money/app/modules/shell/bindings/shell_binding.dart';
 import 'package:your_money/app/modules/kategori/views/kategori_view.dart';
 import 'package:your_money/app/modules/kategori/views/detail_kategori.dart';
 import 'package:your_money/app/modules/anggaran/views/anggaran_view.dart';
+import 'package:your_money/app/modules/pengigat/views/pengingat_view.dart';
 import 'package:your_money/app/routes/app_routes.dart';
 
 // Onboarding
@@ -67,7 +68,11 @@ class AppPages {
     GetPage(
       name: Routes.ANGGARAN,
       page: () => const AnggaranView(),
-    )
+    ),
+    GetPage(
+      name: Routes.PENGINGAT,
+      page: () => const PengingatView(),
+    ),
   ];
 
   static final GetPage unknownRoute = GetPage(

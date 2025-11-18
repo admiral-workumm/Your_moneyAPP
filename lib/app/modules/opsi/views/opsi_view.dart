@@ -72,7 +72,7 @@ class OpsiView extends StatelessWidget {
               children: [
                 _buildOption(context, Icons.add_alert_outlined, 'Pengingat',
                     () {
-                  // TODO: navigate to Pengingat
+                  Get.toNamed(Routes.PENGINGAT);
                 }),
                 _buildOption(context, Icons.attach_money_outlined, 'Anggaran',
                     () {
