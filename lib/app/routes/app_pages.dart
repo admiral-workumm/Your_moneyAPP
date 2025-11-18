@@ -5,6 +5,7 @@ import 'package:your_money/app/modules/catatkeuangan/bindings/catatkeuangan_bind
 import 'package:your_money/app/modules/catatkeuangan/views/catat_keuangan_view.dart';
 import 'package:your_money/app/modules/home/bindings/home_binding.dart';
 import 'package:your_money/app/modules/home/views/home_view.dart';
+import 'package:your_money/app/modules/logout/bukumu_view.dart';
 import 'package:your_money/app/modules/shell/views/shell_view.dart';
 import 'package:your_money/app/modules/shell/bindings/shell_binding.dart';
 import 'package:your_money/app/modules/kategori/views/kategori_view.dart';
@@ -67,7 +68,11 @@ class AppPages {
     GetPage(
       name: Routes.ANGGARAN,
       page: () => const AnggaranView(),
-    )
+    ),
+    GetPage(
+      name: Routes.BUKUMU,
+      page: () => const BukumuView(),
+    ),
   ];
 
   static final GetPage unknownRoute = GetPage(

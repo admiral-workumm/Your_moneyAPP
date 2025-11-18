@@ -10,4 +10,5 @@ abstract class Routes {
   static const KATEGORI = '/kategori';
   static const DETAIL_KATEGORI = '/detail-kategori';
   static const ANGGARAN = '/anggaran';
+  static const BUKUMU = '/buku';
 }
