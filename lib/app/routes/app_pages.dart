@@ -11,6 +11,7 @@ import 'package:your_money/app/modules/shell/bindings/shell_binding.dart';
 import 'package:your_money/app/modules/kategori/views/kategori_view.dart';
 import 'package:your_money/app/modules/kategori/views/detail_kategori.dart';
 import 'package:your_money/app/modules/anggaran/views/anggaran_view.dart';
+import 'package:your_money/app/modules/pengigat/views/pengingat_view.dart';
 import 'package:your_money/app/routes/app_routes.dart';
 
 // Onboarding
@@ -70,8 +71,13 @@ class AppPages {
       page: () => const AnggaranView(),
     ),
     GetPage(
+<<<<<<< HEAD
       name: Routes.BUKUMU,
       page: () => const BukumuView(),
+=======
+      name: Routes.PENGINGAT,
+      page: () => const PengingatView(),
+>>>>>>> 4cf17a83d0abdccff08885e43d43ba9508e5f0fe
     ),
   ];
 
