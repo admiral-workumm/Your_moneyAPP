@@ -82,7 +82,7 @@ class OpsiView extends StatelessWidget {
                   Get.toNamed(Routes.KATEGORI);
                 }),
                 _buildOption(context, Icons.logout, 'Log Out', () {
-                  // TODO: perform logout
+                  Get.toNamed(Routes.BUKUMU); // Navigasi ke Bukumu
                 }),
               ],
             ),

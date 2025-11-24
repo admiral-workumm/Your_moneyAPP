@@ -71,13 +71,12 @@ class AppPages {
       page: () => const AnggaranView(),
     ),
     GetPage(
-<<<<<<< HEAD
       name: Routes.BUKUMU,
       page: () => const BukumuView(),
-=======
+    ),
+    GetPage(
       name: Routes.PENGINGAT,
       page: () => const PengingatView(),
->>>>>>> 4cf17a83d0abdccff08885e43d43ba9508e5f0fe
     ),
   ];
 

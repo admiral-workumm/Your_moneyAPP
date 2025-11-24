@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:your_money/app/routes/app_routes.dart';
 
 class BukumuView extends StatelessWidget {
   const BukumuView({Key? key}) : super(key: key);
@@ -76,7 +77,7 @@ class BukumuView extends StatelessWidget {
                 ),
                 child: InkWell(
                   onTap: () {
-                    // TODO: Navigate to Keuangan drest
+                    Get.offAllNamed(Routes.HOME);
                     print('Keuangan drest tapped');
                   },
                   child: Padding(
