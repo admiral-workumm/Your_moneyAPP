@@ -1,6 +1,9 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
+import '../widgets/donut_chart.dart';
+import '../widgets/small_chip.dart';
+import '../widgets/segment.dart';
+
+enum ChartType { pengeluaran, pemasukan, anggaran }
 
 class GrafikView extends StatefulWidget {
   const GrafikView({super.key});
@@ -14,10 +17,30 @@ class _GrafikViewState extends State<GrafikView> {
   static const _blueDark = Color(0xFF1565C0);
 
   // sample data (percent sum should be 100)
-  final List<_Segment> segments = const [
-    _Segment(name: 'Makanan', percent: 50, color: Color(0xFF0D6EFF)),
-    _Segment(name: 'Hiburan', percent: 32, color: Color(0xFF64B5F6)),
-    _Segment(name: 'Minuman', percent: 18, color: Color(0xFF90CAF9)),
+  final List<Segment> expenseSegments = const [
+    Segment(name: 'Makanan', percent: 50, color: Color(0xFF0D6EFF)),
+    Segment(name: 'Hiburan', percent: 32, color: Color(0xFF64B5F6)),
+    Segment(name: 'Minuman', percent: 18, color: Color(0xFF90CAF9)),
+  ];
+  final List<Segment> incomeSegments = const [
+    // gunakan palette biru juga agar konsisten
+    Segment(name: 'Gaji', percent: 70, color: Color(0xFF0D6EFF)),
+    Segment(name: 'Bonus', percent: 20, color: Color(0xFF64B5F6)),
+    Segment(name: 'Investasi', percent: 10, color: Color(0xFF90CAF9)),
+  ];
+  ChartType chartType = ChartType.pengeluaran;
+  List<Segment> get _segments =>
+      chartType == ChartType.pengeluaran ? expenseSegments : incomeSegments;
+
+  // sample anggaran data
+  final List<_Budget> _budgets = [
+    _Budget(
+      name: 'Makan Mingguan',
+      start: DateTime(2025, 1, 20),
+      end: DateTime(2025, 1, 25),
+      current: 100000,
+      limit: 200000,
+    ),
   ];
 
   int month = 10;
@@ -102,14 +125,33 @@ class _GrafikViewState extends State<GrafikView> {
                 const SizedBox(height: 12),
                 // small chips row
                 Row(
-                  children: const [
-                    _SmallChip(
-                        label: 'Pengeluaran',
-                        icon: Icons.shopping_bag_outlined),
-                    SizedBox(width: 8),
-                    _SmallChip(label: 'Pemasukan', icon: Icons.savings),
-                    SizedBox(width: 8),
-                    _SmallChip(label: 'Buku', icon: Icons.book),
+                  children: [
+                    SmallChip(
+                      label: 'Pengeluaran',
+                      icon: Icons.shopping_bag_outlined,
+                      selected: chartType == ChartType.pengeluaran,
+                      onTap: () => setState(() {
+                        chartType = ChartType.pengeluaran;
+                      }),
+                    ),
+                    const SizedBox(width: 8),
+                    SmallChip(
+                      label: 'Pemasukan',
+                      icon: Icons.savings,
+                      selected: chartType == ChartType.pemasukan,
+                      onTap: () => setState(() {
+                        chartType = ChartType.pemasukan;
+                      }),
+                    ),
+                    const SizedBox(width: 8),
+                    SmallChip(
+                      label: 'Anggaran',
+                      icon: Icons.book,
+                      selected: chartType == ChartType.anggaran,
+                      onTap: () => setState(() {
+                        chartType = ChartType.anggaran;
+                      }),
+                    ),
                   ],
                 ),
               ],
@@ -123,90 +165,67 @@ class _GrafikViewState extends State<GrafikView> {
               padding: EdgeInsets.fromLTRB(16, 20, 16, bottomSpacer),
               child: Column(
                 children: [
-                  // donut chart with labels
-                  SizedBox(
-                    height: 240,
-                    child: Center(
-                      child: SizedBox(
-                        width: 220,
-                        height: 220,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            CustomPaint(
-                              size: const Size(220, 220),
-                              painter: _DonutPainter(segments: segments),
-                            ),
-                            // inner white circle sized to match the painted donut hole
-                            Builder(builder: (ctx) {
-                              const double paintSize = 220.0;
-                              const double stroke = 36.0;
-                              final double radius = paintSize / 2;
-                              // outer arc center = radius - stroke/2; inner radius = outer - stroke
-                              // correct geometry:
-                              // drawArc used center radius = R - stroke/2, so
-                              // innermost arc edge = R - stroke
-                              final double arcInner = radius - stroke;
-                              // expand a couple pixels to ensure the center is fully white (covers anti-aliased gap)
-                              final double innerDiameter =
-                                  ((arcInner + 2.0) * 2).clamp(0.0, paintSize);
-                              return Container(
-                                width: innerDiameter,
-                                height: innerDiameter,
-                                decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle),
-                                alignment: Alignment.center,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    Text('Pengeluaran',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w700)),
-                                    SizedBox(height: 6),
-                                    Text('Rp 300,000',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w700)),
-                                  ],
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
+                  if (chartType != ChartType.anggaran) ...[
+                    // donut chart with labels
+                    DonutChart(
+                      segments: _segments,
+                      width: 320,
+                      height: 220,
+                      centerBuilder: (context) => Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            chartType == ChartType.pengeluaran
+                                ? 'Pengeluaran'
+                                : 'Pemasukan',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(_totalLabel(),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w700)),
+                        ],
                       ),
                     ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // list of categories
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: const [
-                        BoxShadow(
-                            color: Color(0x14000000),
-                            blurRadius: 8,
-                            offset: Offset(0, 4))
-                      ],
+                    const SizedBox(height: 20),
+                    // list of categories
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: const [
+                          BoxShadow(
+                              color: Color(0x14000000),
+                              blurRadius: 8,
+                              offset: Offset(0, 4))
+                        ],
+                      ),
+                      child: Column(
+                        children: _segments
+                            .map((s) => Column(
+                                  children: [
+                                    _CategoryRow(
+                                        name: s.name,
+                                        percent: '${s.percent}%',
+                                        amount: _amountFor(s)),
+                                    if (s != _segments.last)
+                                      const Divider(height: 0),
+                                  ],
+                                ))
+                            .toList(),
+                      ),
                     ),
-                    child: Column(
-                      children: segments
-                          .map((s) => Column(
-                                children: [
-                                  _CategoryRow(
-                                      name: s.name,
-                                      percent: '${s.percent}%',
-                                      amount: _amountFor(s)),
-                                  if (s != segments.last)
-                                    const Divider(height: 0),
-                                ],
+                  ] else ...[
+                    // anggaran cards list
+                    Column(
+                      children: _budgets
+                          .map((b) => Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: _BudgetCard(budget: b),
                               ))
                           .toList(),
                     ),
-                  ),
-
+                  ],
                   const SizedBox(height: 12),
                 ],
               ),
@@ -217,157 +236,21 @@ class _GrafikViewState extends State<GrafikView> {
     );
   }
 
-  String _amountFor(_Segment s) {
-    // fake amounts corresponding to percent (for demo)
-    final total = 300000;
+  String _amountFor(Segment s) {
+    final total = chartType == ChartType.pengeluaran ? 300000 : 500000;
     final a = (total * s.percent / 100).round();
     final formatted = a
         .toString()
         .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => '.');
     return 'Rp$formatted';
   }
-}
 
-class _Segment {
-  final String name;
-  final int percent;
-  final Color color;
-  const _Segment(
-      {required this.name, required this.percent, required this.color});
-
-  double get fraction => percent / 100.0;
-}
-
-class _DonutPainter extends CustomPainter {
-  final List<_Segment> segments;
-  const _DonutPainter({required this.segments});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final center = rect.center;
-    final radius = math.min(size.width, size.height) / 2;
-    final stroke = 36.0;
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..strokeCap = StrokeCap.butt;
-
-    double start = -math.pi / 2; // top
-    for (final s in segments) {
-      final sweep = s.fraction * 2 * math.pi;
-      paint.shader = null;
-      paint.color = s.color;
-      canvas.drawArc(
-          Rect.fromCircle(center: center, radius: radius - stroke / 2),
-          start,
-          sweep,
-          false,
-          paint);
-
-      // percent text inside ring (center of stroke)
-      final mid = start + sweep / 2;
-      // compute correct ring geometry
-      final centerRadius = radius - stroke / 2; // where arc is centered
-      final arcOuter = radius; // outermost edge of arc
-      final pctRadius =
-          centerRadius; // middle of the ring (where percent should sit)
-      final pDx = center.dx + pctRadius * math.cos(mid);
-      final pDy = center.dy + pctRadius * math.sin(mid);
-      final percentText = TextSpan(
-        text: '${s.percent}%',
-        style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-            shadows: [
-              Shadow(blurRadius: 2, color: Colors.black26, offset: Offset(0, 1))
-            ]),
-      );
-      final tp =
-          TextPainter(text: percentText, textDirection: TextDirection.ltr);
-      tp.layout();
-      tp.paint(canvas, Offset(pDx - tp.width / 2, pDy - tp.height / 2));
-
-      // name label outside the ring (aligned left/right per side) with a short leader line
-      final nameText = TextSpan(
-          text: s.name,
-          style: const TextStyle(fontSize: 13, color: Colors.black));
-      final tn = TextPainter(text: nameText, textDirection: TextDirection.ltr);
-      tn.layout();
-
-      final nameRadius = arcOuter +
-          40.0; // distance from center for the name (moved further out)
-      final nDx = center.dx + nameRadius * math.cos(mid);
-      final nDy = center.dy + nameRadius * math.sin(mid);
-
-      // determine side and compute anchor so text doesn't overlap the arc
-      final bool onRight = math.cos(mid) >= 0;
-      double nX;
-      if (onRight) {
-        nX = nDx + 6; // small gap from radial line
-      } else {
-        nX = nDx - tn.width - 6; // align text to the left of the radial line
-      }
-      double nY = nDy - tn.height / 2;
-
-      // clamp to canvas bounds
-      nX = nX.clamp(4.0, size.width - tn.width - 4.0);
-      nY = nY.clamp(4.0, size.height - tn.height - 4.0);
-
-      // leader line from arc outer to a point near the text
-      final arcPoint = Offset(center.dx + arcOuter * math.cos(mid),
-          center.dy + arcOuter * math.sin(mid));
-      final labelAttach = onRight
-          ? Offset(nX - 6, nY + tn.height / 2)
-          : Offset(nX + tn.width + 6, nY + tn.height / 2);
-      final linePaint = Paint()
-        ..color = Colors.grey.shade400
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4
-        ..strokeCap = StrokeCap.round;
-      // draw a short straight line then a horizontal cap to the text
-      // midPoint closer to the arc to make the leader line subtle but visible
-      final midPoint = Offset(
-          arcPoint.dx + (labelAttach.dx - arcPoint.dx) * 0.35,
-          arcPoint.dy + (labelAttach.dy - arcPoint.dy) * 0.35);
-      canvas.drawLine(arcPoint, midPoint, linePaint);
-      canvas.drawLine(midPoint, labelAttach, linePaint);
-
-      // paint the name
-      tn.paint(canvas, Offset(nX, nY));
-
-      start += sweep;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
-
-class _SmallChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  const _SmallChip({required this.label, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: Colors.white),
-          const SizedBox(width: 8),
-          Text(label,
-              style: const TextStyle(color: Colors.white, fontSize: 12)),
-        ],
-      ),
-    );
+  String _totalLabel() {
+    final total = chartType == ChartType.pengeluaran ? 300000 : 500000;
+    final formatted = total
+        .toString()
+        .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => '.');
+    return 'Rp $formatted';
   }
 }
 
@@ -390,6 +273,145 @@ class _CategoryRow extends StatelessWidget {
           Text(amount,
               style:
                   const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
+
+// Budget model
+class _Budget {
+  final String name;
+  final DateTime start;
+  final DateTime end;
+  final int current;
+  final int limit;
+  const _Budget({
+    required this.name,
+    required this.start,
+    required this.end,
+    required this.current,
+    required this.limit,
+  });
+  double get progress => limit == 0 ? 0 : current / limit;
+}
+
+// Budget card widget
+class _BudgetCard extends StatelessWidget {
+  final _Budget budget;
+  static const _blue = Color(0xFF0D6EFF);
+  const _BudgetCard({required this.budget});
+
+  String _fmt(int v) => v
+      .toString()
+      .replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => '.');
+
+  String _dateFmt(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')} / ${d.year}'; // sesuai contoh screenshot
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x14000000), blurRadius: 10, offset: Offset(0, 4))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(budget.name,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600)),
+              ),
+              Column(
+                children: const [
+                  Icon(Icons.notifications_active_outlined, color: _blue),
+                  SizedBox(height: 4),
+                  Text('Anggaran',
+                      style: TextStyle(
+                          color: _blue,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Icon(Icons.calendar_today_outlined, size: 18, color: _blue),
+              const SizedBox(width: 8),
+              Text('${_dateFmt(budget.start)} ~ ${_dateFmt(budget.end)}',
+                  style: const TextStyle(fontSize: 13)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, c) {
+              final pct = budget.progress.clamp(0, 1);
+              final barWidth = c.maxWidth;
+              final filled = barWidth * pct;
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  Positioned(
+                    left: 0,
+                    child: Container(
+                      height: 26,
+                      width: filled,
+                      decoration: BoxDecoration(
+                        color: _blue,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      children: [
+                        Text('Rp ${_fmt(budget.current)}',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600)),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text('${(pct * 100).round()}%',
+                              style: const TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.w600)),
+                        ),
+                        const Spacer(),
+                        Text('Rp ${_fmt(budget.limit)}',
+                            style: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ],
       ),
     );
