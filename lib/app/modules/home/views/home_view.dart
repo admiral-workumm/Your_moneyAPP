@@ -17,7 +17,7 @@ class HomeScreen extends GetView<HomeController> {
 
   // Layout
   static const double headerH = 260;
-  static const double saldoCardH = 148;
+  static const double saldoCardH = 200;
   static const double sidePad = 16;
   static const double sheetRadius = 24;
 
@@ -381,7 +381,6 @@ class _SaldoCard extends StatelessWidget {
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (m) => '${m[1]}.',
     );
-    // Hasil: 1000000 -> 1.000.000
   }
 
   @override
@@ -389,58 +388,180 @@ class _SaldoCard extends StatelessWidget {
     final c = Get.find<HomeController>();
     return Container(
       height: HomeScreen.saldoCardH,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: HomeScreen._card,
+        gradient: const LinearGradient(
+          colors: [
+            Color.fromARGB(255, 255, 255, 255),
+            Color.fromARGB(255, 255, 255, 255)
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(.12),
-              blurRadius: 24,
-              offset: const Offset(0, 12))
+            color: Colors.black.withOpacity(.15),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          )
         ],
       ),
       child: Obx(
         () => Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Total Saldo',
-                style: TextStyle(color: Colors.black54, fontSize: 12)),
-            const SizedBox(height: 4),
-            Text(
-              'Rp${_rupiah(c.saldoTotal.value)}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
+            // Top Row: Total Saldo & Date Picker
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Total Saldo Section (KIRI)
                 Expanded(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Rp${_rupiah(c.pemasukan.value)}',
-                          style: const TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 2),
-                      const Text('Pemasukan', style: TextStyle(fontSize: 12)),
+                      const Text(
+                        'Total Saldo',
+                        style: TextStyle(
+                          color: Colors.black54,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Rp${_rupiah(c.saldoTotal.value)}',
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.black87,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                Container(width: 1, height: 20, color: Colors.grey.shade300),
-                const Expanded(
-                  child: Column(
+
+                // Date Picker (KANAN ATAS)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text('Rp200,000',
-                          style: TextStyle(
-                              color: Colors.red, fontWeight: FontWeight.w700)),
-                      SizedBox(height: 2),
-                      Row(mainAxisSize: MainAxisSize.min, children: [
-                        Icon(Icons.info_outline, size: 12, color: Colors.grey),
-                        SizedBox(width: 4),
-                        Text('Pengeluaran', style: TextStyle(fontSize: 12)),
-                      ]),
+                      const Icon(
+                        Icons.chevron_left,
+                        size: 20,
+                        color: Colors.blue,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _formatMonth(DateTime.now()),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.chevron_right,
+                        size: 20,
+                        color: Colors.blue,
+                      ),
                     ],
+                  ),
+                ),
+              ],
+            ),
+
+            // Pemasukan & Pengeluaran Row
+            Row(
+              children: [
+                // Pemasukan
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Rp${_rupiah(c.pemasukan.value)}',
+                          style: const TextStyle(
+                            color: Color(0xFF4CAF50),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Row(
+                          children: [
+                            Icon(Icons.arrow_upward,
+                                size: 12, color: Colors.black54),
+                            SizedBox(width: 4),
+                            Text(
+                              'Pemasukan',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // Pengeluaran
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Rp${_rupiah(c.pengeluaran.value)}',
+                          style: const TextStyle(
+                            color: Color(0xFFF44336),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Row(
+                          children: [
+                            Icon(Icons.arrow_downward,
+                                size: 12, color: Colors.black54),
+                            SizedBox(width: 4),
+                            Text(
+                              'Pengeluaran',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -449,6 +570,24 @@ class _SaldoCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatMonth(DateTime date) {
+    const months = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember'
+    ];
+    return '${months[date.month - 1]} ${date.year}';
   }
 }
 

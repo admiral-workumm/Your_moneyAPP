@@ -8,7 +8,7 @@ class OnboardAturBukuView extends GetView<AturBukuController> {
   InputDecoration get _decoration => InputDecoration(
         isDense: true,
         filled: true,
-        fillColor: const Color(0xFFF5F5F5),
+        fillColor: Colors.white,
         hintText: '',
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -22,7 +22,6 @@ class OnboardAturBukuView extends GetView<AturBukuController> {
         ),
       );
 
-  @override
   @override
   Widget build(BuildContext context) {
     const blue = Color(0xFF1E88E5);
@@ -83,33 +82,7 @@ class OnboardAturBukuView extends GetView<AturBukuController> {
                     TextField(
                       controller: controller.namaBukuC,
                       decoration: _decoration.copyWith(hintText: 'Nama Buku'),
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: controller.kartuDebitC,
-                      decoration:
-                          _decoration.copyWith(hintText: 'Nama Kartu Debit'),
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 12),
-
-                    Obx(
-                      () => DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        value: controller.selectedCurrency.value,
-                        items: controller.currencies
-                            .map((e) =>
-                                DropdownMenuItem(value: e, child: Text(e)))
-                            .toList(),
-                        onChanged: (val) {
-                          if (val != null) {
-                            controller.selectedCurrency.value = val;
-                          }
-                        },
-                        icon: const Icon(Icons.arrow_drop_down),
-                        decoration: _decoration.copyWith(hintText: 'Mata Uang'),
-                      ),
+                      textInputAction: TextInputAction.done,
                     ),
 
                     SizedBox(height: hasKeyboard ? 16 : 28),
