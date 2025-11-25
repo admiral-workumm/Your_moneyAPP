@@ -47,7 +47,7 @@ Aplikasi ini dirancang dengan antarmuka yang user friendly, dan mudah dipahami o
 ---
 
 ## 🧪 **Low-Fidelity Prototype**
-👉 *(Tempel link Lo-Fi Prototype di sini)*
+👉 *[Folder Low-Fidelity Your Money](https://github.com/admiral-workumm/Your_moneyAPP/tree/main/Low%20Fidelity%20Your%20Money)*
 
 ---
 
