@@ -16,8 +16,8 @@ class HomeScreen extends GetView<HomeController> {
   static const _card = Colors.white;
 
   // Layout
-  static const double headerH = 260;
-  static const double saldoCardH = 200;
+  static const double headerH = 280;
+  static const double saldoCardH = 180;
   static const double sidePad = 16;
   static const double sheetRadius = 24;
 
@@ -316,9 +316,6 @@ class _HeaderTopRow extends StatelessWidget {
             child: Text('Your money',
                 style: TextStyle(
                     color: Colors.white70, fontSize: 12, letterSpacing: .2))),
-        _HeaderIcon(icon: Icons.calendar_month_outlined),
-        SizedBox(width: 8),
-        _HeaderIcon(icon: Icons.grid_view_rounded),
       ],
     );
   }
@@ -418,7 +415,7 @@ class _SaldoCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Total Saldo Section (KIRI)
-                Expanded(
+                Flexible(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -434,10 +431,13 @@ class _SaldoCard extends StatelessWidget {
                       Text(
                         'Rp${_rupiah(c.saldoTotal.value)}',
                         style: const TextStyle(
-                          fontSize: 32,
+                          fontSize: 28,
                           fontWeight: FontWeight.w800,
                           color: Colors.black87,
+                          height: 1.2,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -446,8 +446,8 @@ class _SaldoCard extends StatelessWidget {
                 // Date Picker (KANAN ATAS)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
+                    horizontal: 8,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.8),
@@ -456,25 +456,41 @@ class _SaldoCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.chevron_left,
-                        size: 20,
-                        color: Colors.blue,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        _formatMonth(DateTime.now()),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.black87,
+                      InkWell(
+                        onTap: () => c.previousMonth(),
+                        borderRadius: BorderRadius.circular(8),
+                        child: const Padding(
+                          padding: EdgeInsets.all(4),
+                          child: Icon(
+                            Icons.chevron_left,
+                            size: 20,
+                            color: Colors.blue,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      const Icon(
-                        Icons.chevron_right,
-                        size: 20,
-                        color: Colors.blue,
+                      const SizedBox(width: 4),
+                      Obx(
+                        () => Text(
+                          _formatMonth(c.selectedDate.value),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      InkWell(
+                        onTap: () => c.nextMonth(),
+                        borderRadius: BorderRadius.circular(8),
+                        child: const Padding(
+                          padding: EdgeInsets.all(4),
+                          child: Icon(
+                            Icons.chevron_right,
+                            size: 20,
+                            color: Colors.blue,
+                          ),
+                        ),
                       ),
                     ],
                   ),

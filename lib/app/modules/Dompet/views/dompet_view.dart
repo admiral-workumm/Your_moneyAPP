@@ -56,19 +56,7 @@ class _DompetViewState extends State<DompetView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // bar atas: ikon kanan
-                          Row(
-                            children: [
-                              const Expanded(child: SizedBox()),
-                              IconButton(
-                                onPressed: () {}, // TODO optional
-                                icon: const Icon(Icons.menu_rounded,
-                                    color: Colors.white),
-                                splashRadius: 22,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 12),
                           const Text(
                             'Dompet',
                             style: TextStyle(
@@ -118,15 +106,13 @@ class _DompetViewState extends State<DompetView> {
                       title: 'Tunai',
                       trailing: 'Rp0',
                       leadingIcon: Icons.account_balance_wallet_rounded,
-                      onAction: () {}, // TODO: opsi
                     ),
                     const SizedBox(height: 12),
                     _WalletCard(
                       sectionTitle: 'Kartu Debit',
-                      title: 'BCA',
+                      title: 'Debit',
                       trailing: 'Rp0',
                       leadingIcon: Icons.credit_card_rounded,
-                      onAction: () {},
                     ),
                     SizedBox(height: _barH + (_fabSize / 2) + safe + 24),
                   ],
@@ -217,114 +203,85 @@ class _WalletCard extends StatelessWidget {
     required this.title,
     required this.trailing,
     required this.leadingIcon,
-    this.actionIcon = Icons.more_vert,
-    this.onAction,
   });
 
   final String sectionTitle;
   final String title;
   final String trailing;
   final IconData leadingIcon;
-  final IconData actionIcon;
-  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
     const iconBlue = Color(0xFF1E88E5);
 
-    return Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE9E9E9), width: 1),
-            boxShadow: const [
-              BoxShadow(
-                  color: Color(0x14000000),
-                  blurRadius: 10,
-                  offset: Offset(0, 4)),
-            ],
-          ),
-          child: Column(
-            children: [
-              // strip header abu-abu
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFEDEDED),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
-                ),
-                child: Text(
-                  sectionTitle,
-                  style: const TextStyle(
-                    color: Color(0xFF6E6E6E),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE9E9E9), width: 1),
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x14000000), blurRadius: 10, offset: Offset(0, 4)),
+        ],
+      ),
+      child: Column(
+        children: [
+          // strip header abu-abu
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: const BoxDecoration(
+              color: Color(0xFFEDEDED),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
+            ),
+            child: Text(
+              sectionTitle,
+              style: const TextStyle(
+                color: Color(0xFF6E6E6E),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
-              // isi kartu
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0F7FF),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFE6F0FF)),
-                      ),
-                      child: Icon(leadingIcon, color: iconBlue, size: 28),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          color: Color(0xFF1A1A1A),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      trailing,
-                      style: const TextStyle(
-                        color: Color(0xFFE53935),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // ikon pojok kanan atas (aksi)
-        Positioned(
-          top: 6,
-          right: 4,
-          child: Material(
-            color: Colors.transparent,
-            child: IconButton(
-              splashRadius: 18,
-              padding: const EdgeInsets.all(6),
-              constraints: const BoxConstraints(),
-              onPressed: onAction,
-              icon: Icon(actionIcon, size: 20, color: Colors.black45),
-              tooltip: 'Opsi',
             ),
           ),
-        ),
-      ],
+          // isi kartu
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0F7FF),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFE6F0FF)),
+                  ),
+                  child: Icon(leadingIcon, color: iconBlue, size: 28),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      color: Color(0xFF1A1A1A),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Text(
+                  trailing,
+                  style: const TextStyle(
+                    color: Color(0xFFE53935),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
