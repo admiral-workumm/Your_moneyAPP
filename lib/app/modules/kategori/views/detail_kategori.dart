@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../controllers/detail_kategori_controller.dart';
 
-class DetailKategoriView extends StatelessWidget {
+class DetailKategoriView extends GetView<DetailKategoriController> {
   const DetailKategoriView({super.key});
 
   @override
@@ -36,7 +37,7 @@ class DetailKategoriView extends StatelessWidget {
   }
 }
 
-class _SummaryCard extends StatelessWidget {
+class _SummaryCard extends GetView<DetailKategoriController> {
   final String title;
   final IconData icon;
   final Color accent;
@@ -87,17 +88,26 @@ class _SummaryCard extends StatelessWidget {
           const SizedBox(height: 12),
           const Divider(height: 1),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(Icons.chevron_left, size: 20, color: Colors.grey[700]),
-              const SizedBox(width: 2),
-              const Text('10 / 2025',
-                  style: TextStyle(fontWeight: FontWeight.w500)),
-              const SizedBox(width: 2),
-              Icon(Icons.chevron_right, size: 20, color: Colors.grey[700]),
-              const Spacer(),
-            ],
-          ),
+          // Month Navigation
+          Obx(() => Row(
+                children: [
+                  InkWell(
+                    onTap: controller.previousMonth,
+                    child: Icon(Icons.chevron_left,
+                        size: 20, color: Colors.grey[700]),
+                  ),
+                  const SizedBox(width: 2),
+                  Text(controller.formattedMonth,
+                      style: const TextStyle(fontWeight: FontWeight.w500)),
+                  const SizedBox(width: 2),
+                  InkWell(
+                    onTap: controller.nextMonth,
+                    child: Icon(Icons.chevron_right,
+                        size: 20, color: Colors.grey[700]),
+                  ),
+                  const Spacer(),
+                ],
+              )),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -142,7 +152,7 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-class _TransactionsCard extends StatelessWidget {
+class _TransactionsCard extends GetView<DetailKategoriController> {
   final Color accent;
   final IconData icon;
   final String title;
@@ -151,6 +161,8 @@ class _TransactionsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dateKey = '2025-10-10';
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -166,50 +178,67 @@ class _TransactionsCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(16)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.arrow_drop_down, color: accent, size: 20),
-                const SizedBox(width: 4),
-                const Text('Min, 10/10',
-                    style: TextStyle(fontWeight: FontWeight.w600)),
-                const Spacer(),
-                Text('Pengeluaran : Rp100,000',
-                    style: TextStyle(
-                        color: Colors.grey[700], fontWeight: FontWeight.w500)),
-              ],
-            ),
-          ),
-          // Items
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Column(
-              children: [
-                _TxRow(
-                    accent: accent,
-                    icon: icon,
-                    title: title,
-                    subtitle: 'Mie Goreng',
-                    amount: '-Rp20,000',
-                    account: 'BCA'),
-                const Divider(height: 1),
-                _TxRow(
-                    accent: accent,
-                    icon: icon,
-                    title: title,
-                    subtitle: 'Burger',
-                    amount: '-Rp30,000',
-                    account: 'BCA'),
-              ],
+          // Header bar - Clickable
+          InkWell(
+            onTap: () => controller.toggleDateExpansion(dateKey),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: Obx(() => Row(
+                    children: [
+                      AnimatedRotation(
+                        turns: controller.isDateExpanded(dateKey) ? 0 : -0.25,
+                        duration: const Duration(milliseconds: 200),
+                        child: Icon(Icons.arrow_drop_down,
+                            color: accent, size: 20),
+                      ),
+                      const SizedBox(width: 4),
+                      const Text('Min, 10/10',
+                          style: TextStyle(fontWeight: FontWeight.w600)),
+                      const Spacer(),
+                      Text('Pengeluaran : Rp100,000',
+                          style: TextStyle(
+                              color: Colors.grey[700],
+                              fontWeight: FontWeight.w500)),
+                    ],
+                  )),
             ),
           ),
+          // Items - Collapsible
+          Obx(() => AnimatedCrossFade(
+                duration: const Duration(milliseconds: 200),
+                crossFadeState: controller.isDateExpanded(dateKey)
+                    ? CrossFadeState.showFirst
+                    : CrossFadeState.showSecond,
+                firstChild: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Column(
+                    children: [
+                      _TxRow(
+                          accent: accent,
+                          icon: icon,
+                          title: title,
+                          subtitle: 'Mie Goreng',
+                          amount: '-Rp20,000',
+                          account: 'BCA'),
+                      const Divider(height: 1),
+                      _TxRow(
+                          accent: accent,
+                          icon: icon,
+                          title: title,
+                          subtitle: 'Burger',
+                          amount: '-Rp30,000',
+                          account: 'BCA'),
+                    ],
+                  ),
+                ),
+                secondChild: const SizedBox.shrink(),
+              )),
         ],
       ),
     );

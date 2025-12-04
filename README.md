@@ -53,14 +53,26 @@ Aplikasi ini dirancang dengan antarmuka yang user friendly, dan mudah dipahami o
 
 ## 📊 **Backlog / Pembagian Tugas Tiap Anggota**
 
-| No | Fitur / Tugas | Penanggung Jawab | Level | Status |
-|----|----------------|------------------|--------|----------|
-| 1 | Desain UI Halaman Dashboard | Admiral | Medium | ✔️ Done |
-| 2 | Fitur Pencatatan Pemasukan | Riyo | Medium | 🔄 In Progress |
-| 3 | Fitur Pencatatan Pengeluaran | Rafi | Medium | ⏳ To Do |
-| 4 | Integrasi Database | Admiral | Hard | ⏳ To Do |
-| 5 | Grafik Keuangan | Riyo | Hard | ⏳ To Do |
-| 6 | Dokumentasi & README | Rafi | Easy | ⏳ To Do |
+| No | Fitur / Tugas | Penanggung Jawab | Status |
+|----|-------------------|------------------|----------|
+| 1 | UI Splash Screen | Admiral | ✔️ Done |
+| 2 | UI Home Screen | Admiral | ✔️ Done |
+| 3 | UI Catatan Keuangan | Admiral | ✔️ Done |
+| 4 | UI Grafiik | Admiral |✔️ Done |
+| 5 | UI Opsi | Rafi | ✔️ Done|
+| 6 | UI Fitur Pengingat | Rafi | ✔️ Done |
+| 7 | UI Akun yang suda ada | Riyo | ✔️ Done |
+| 8 | UI Akun yang suda ada | Riyo | ✔️ Done |
+| 9 | Update UI card Total saldo | Rafi | ✔️ Done |
+| 11 | Update UI Grafik Screen| Admiral | ✔️ Done |
+| 12 | First Readme | Admiral | ✔️ Done |
+| 13 | Navigasi Logut | Rio | ✔️ Done |
+| 14 | Navigasi Logut | Rio | ✔️ Done |
+| 15 | Update Readme | Rafi | ✔️ Done |
+| 17 | Navigasi Opsi ke Pengingat  | Rafi | ✔️ Done |
+| 18 | Update Navigasi Ganti bulan | Admiral | ✔️ Done |
+| 19 | Navigasi card pengeluaran | Rio | ⏳ Proses |
+| 12 | Navigasi card Detail Kategori | Rafi | ⏳ Proses |
 
 > Tabel bisa ditambah sesuai Sprint 1, Sprint 2, dst.
 
