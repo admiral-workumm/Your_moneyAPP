@@ -608,10 +608,14 @@ class _SaldoCard extends StatelessWidget {
 }
 
 // ================== LIST GROUP ==================
-class _TransactionGroup extends StatelessWidget {
+// ================== LIST GROUP (EXPANDABLE) ==================
+// Ganti class _TransactionGroup dengan kode ini:
+
+class _TransactionGroup extends StatefulWidget {
   final String headerLeft;
   final String headerRight;
   final List<_TxnTile> items;
+
   const _TransactionGroup({
     required this.headerLeft,
     required this.headerRight,
@@ -619,8 +623,56 @@ class _TransactionGroup extends StatelessWidget {
   });
 
   @override
+  State<_TransactionGroup> createState() => _TransactionGroupState();
+}
+
+class _TransactionGroupState extends State<_TransactionGroup>
+    with SingleTickerProviderStateMixin {
+  bool isExpanded = true; // Default expanded
+  late AnimationController _animationController;
+  late Animation<double> _iconTurns;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _iconTurns = Tween<double>(begin: 0.0, end: 0.5).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    // Set initial state
+    if (isExpanded) {
+      _animationController.value = 1.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _toggleExpand() {
+    setState(() {
+      isExpanded = !isExpanded;
+      if (isExpanded) {
+        _animationController.forward();
+      } else {
+        _animationController.reverse();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     const stripBg = Color(0xFFF0F0F0);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 0),
       decoration: BoxDecoration(
@@ -637,33 +689,76 @@ class _TransactionGroup extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: const BoxDecoration(
-              color: stripBg,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+          // Header yang bisa di-tap
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _toggleExpand,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: const BoxDecoration(
+                  color: stripBg,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Animated icon
+                    RotationTransition(
+                      turns: _iconTurns,
+                      child: const Icon(
+                        Icons.expand_more,
+                        size: 20,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      widget.headerLeft,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (widget.headerRight.isNotEmpty)
+                      Text(
+                        widget.headerRight,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 11,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-            child: Row(
+          ),
+
+          // Content yang bisa di-expand/collapse
+          AnimatedCrossFade(
+            firstChild: Column(
               children: [
-                const Icon(Icons.expand_more, size: 16, color: Colors.grey),
-                const SizedBox(width: 6),
-                Text(headerLeft,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 12)),
-                const Spacer(),
-                if (headerRight.isNotEmpty)
-                  Text(headerRight,
-                      style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                for (int i = 0; i < widget.items.length; i++) ...[
+                  if (i != 0) const Divider(height: 0),
+                  widget.items[i],
+                ],
               ],
             ),
+            secondChild: const SizedBox.shrink(),
+            crossFadeState: isExpanded
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
+            duration: const Duration(milliseconds: 300),
+            sizeCurve: Curves.easeInOut,
           ),
-          for (int i = 0; i < items.length; i++) ...[
-            if (i != 0) const Divider(height: 0),
-            items[i],
-          ],
         ],
       ),
     );
@@ -681,33 +776,201 @@ class _TxnTile extends StatelessWidget {
     required this.bank,
   });
 
+  void _showTransactionDetail(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            width: 300,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Tombol X di pojok kiri atas
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    InkWell(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        child: const Icon(
+                          Icons.close,
+                          size: 24,
+                          color: Colors.black54,
+                        ),
+                      ),
+                    ),
+                    // Icon edit dan delete di kanan
+                    Row(
+                      children: [
+                        InkWell(
+                          onTap: () {
+                            // Handle edit
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            child: const Icon(
+                              Icons.edit,
+                              size: 22,
+                              color: HomeScreen._blue,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        InkWell(
+                          onTap: () {
+                            // Handle delete
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            child: const Icon(
+                              Icons.delete,
+                              size: 22,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+
+                // Icon dan Label GAME
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: HomeScreen._blue,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(icon, color: Colors.white, size: 24),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // Tanggal
+                Text(
+                  'Tanggal : 10/10/2025',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black54,
+                    height: 1.6,
+                  ),
+                ),
+
+                // Dompet
+                Text(
+                  'Dompet : $bank',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black54,
+                    height: 1.6,
+                  ),
+                ),
+
+                // Buku
+                const Text(
+                  'Buku : Keuangan drest',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black54,
+                    height: 1.6,
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Catatan (bold)
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                    height: 1.4,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Amount (highlighted)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    amount,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+// Update build method di class _TxnTile
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      minLeadingWidth: 0,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: HomeScreen._blue.withOpacity(.10),
-          borderRadius: BorderRadius.circular(10),
+    return InkWell(
+      onTap: () => _showTransactionDetail(context),
+      child: ListTile(
+        minLeadingWidth: 0,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: HomeScreen._blue.withOpacity(.10),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          alignment: Alignment.center,
+          child: Icon(icon, color: HomeScreen._blue, size: 22),
         ),
-        alignment: Alignment.center,
-        child: Icon(icon, color: HomeScreen._blue, size: 22),
-      ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-      subtitle: Text(subtitle, style: const TextStyle(color: Colors.black54)),
-      trailing: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(amount,
-              style: const TextStyle(
-                  color: Colors.red, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 2),
-          Text(bank, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-        ],
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+        subtitle: Text(subtitle, style: const TextStyle(color: Colors.black54)),
+        trailing: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(amount,
+                style: const TextStyle(
+                    color: Colors.red, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 2),
+            Text(bank,
+                style: const TextStyle(color: Colors.grey, fontSize: 12)),
+          ],
+        ),
       ),
     );
   }
