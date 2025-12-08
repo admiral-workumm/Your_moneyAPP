@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:your_money/app/data/services/transaksi_service.dart';
+import 'package:your_money/app/modules/catatkeuangan/controllers/catatkeuangan_controller.dart';
 import 'package:your_money/app/routes/app_routes.dart';
 import '../controllers/home_controller.dart';
 
@@ -45,9 +47,6 @@ class HomeScreen extends GetView<HomeController> {
         resizeToAvoidBottomInset: false,
         body: LayoutBuilder(
           builder: (context, _) {
-            final bottomInset = MediaQuery.of(context).padding.bottom;
-            final extraBottom = _barH + bottomInset + 32; // ruang list
-
             return Stack(
               clipBehavior: Clip.none,
               children: [
@@ -82,55 +81,7 @@ class HomeScreen extends GetView<HomeController> {
                 // LIST (anti overflow)
                 Positioned.fill(
                   top: listTop,
-                  child: ListView(
-                    physics: const BouncingScrollPhysics(),
-                    padding:
-                        EdgeInsets.fromLTRB(sidePad, 0, sidePad, extraBottom),
-                    children: const [
-                      _TransactionGroup(
-                        headerLeft: 'Min, 10/10',
-                        headerRight: 'Pengeluaran : Rp200,000',
-                        items: [
-                          _TxnTile(
-                            icon: Icons.videogame_asset,
-                            title: 'GAME',
-                            subtitle: 'Top up Valorant',
-                            amount: '-Rp100,000',
-                            bank: 'BCA',
-                          ),
-                          _TxnTile(
-                            icon: Icons.videogame_asset,
-                            title: 'GAME',
-                            subtitle: 'Top up PUBG',
-                            amount: '-Rp100,000',
-                            bank: 'BCA',
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 12),
-                      _TransactionGroup(
-                        headerLeft: 'Min, 10/10',
-                        headerRight: '',
-                        items: [
-                          _TxnTile(
-                            icon: Icons.videogame_asset,
-                            title: 'GAME',
-                            subtitle: 'Top up Valorant',
-                            amount: '-Rp100,000',
-                            bank: 'BCA',
-                          ),
-                          _TxnTile(
-                            icon: Icons.videogame_asset,
-                            title: 'GAME',
-                            subtitle: 'Top up PUBG',
-                            amount: '-Rp100,000',
-                            bank: 'BCA',
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 24),
-                    ],
-                  ),
+                  child: _TransactionListBuilder(),
                 ),
 
                 // ===== BOTTOM PLATE PUTIH (bukan BottomAppBar) =====
@@ -160,6 +111,15 @@ class HomeScreen extends GetView<HomeController> {
                           clipBehavior: Clip.antiAlias,
                           child: InkWell(
                             onTap: () {
+                              // Ensure controller is initialized
+                              if (!Get.isRegistered<
+                                  CatatKeuanganController>()) {
+                                Get.put<CatatKeuanganController>(
+                                    CatatKeuanganController());
+                              }
+                              // Reset form untuk create baru (bukan edit)
+                              Get.find<CatatKeuanganController>()
+                                  .resetFormForCreate();
                               Get.toNamed(Routes.CATAT_KEUANGAN);
                             },
                             child: Center(
@@ -772,12 +732,15 @@ class _TransactionGroupState extends State<_TransactionGroup>
 class _TxnTile extends GetView<HomeController> {
   final IconData icon;
   final String title, subtitle, amount, bank;
+  final dynamic transaksi; // Transaksi object untuk edit/delete
+
   const _TxnTile({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.amount,
     required this.bank,
+    this.transaksi,
   });
 
   void _showTransactionDetail(BuildContext context) {
@@ -819,7 +782,11 @@ class _TxnTile extends GetView<HomeController> {
                       children: [
                         InkWell(
                           onTap: () {
-                            // Handle edit
+                            if (transaksi != null) {
+                              // Buka form catat keuangan dengan data pre-filled
+                              Navigator.pop(context); // Close detail dialog
+                              _openEditForm(transaksi);
+                            }
                           },
                           child: Container(
                             padding: const EdgeInsets.all(4),
@@ -833,7 +800,10 @@ class _TxnTile extends GetView<HomeController> {
                         const SizedBox(width: 8),
                         InkWell(
                           onTap: () {
-                            // Handle delete
+                            if (transaksi != null) {
+                              // Delete langsung tanpa konfirmasi
+                              _deleteTransaksiReal(context, transaksi);
+                            }
                           },
                           child: Container(
                             padding: const EdgeInsets.all(4),
@@ -980,6 +950,36 @@ class _TxnTile extends GetView<HomeController> {
       ),
     );
   }
+
+  void _openEditForm(dynamic txn) {
+    // Buka form catat keuangan dengan data pre-filled
+    // Inisialisasi controller jika belum ada
+    if (!Get.isRegistered<CatatKeuanganController>()) {
+      Get.put<CatatKeuanganController>(CatatKeuanganController());
+    }
+    Get.find<CatatKeuanganController>().loadTransaksiForEdit(txn);
+    Get.toNamed(Routes.CATAT_KEUANGAN);
+  }
+
+  void _deleteTransaksiReal(BuildContext context, dynamic txn) async {
+    // Delete langsung tanpa konfirmasi
+    await TransaksiService().deleteTransaksi(txn.id);
+
+    // Close detail dialog
+    Navigator.pop(context);
+
+    // Refresh home
+    controller.refreshTransaksi();
+
+    // Show success message
+    Get.snackbar(
+      'Berhasil',
+      'Transaksi ${txn.kategori} dihapus',
+      backgroundColor: Colors.green.withOpacity(0.9),
+      colorText: Colors.white,
+      snackPosition: SnackPosition.TOP,
+    );
+  }
 }
 
 // ================== NAV ITEM ==================
@@ -1032,5 +1032,141 @@ class _AssetNavItem extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ================== HELPER: Map kategori ke icon ==================
+IconData _getIconForKategori(String kategori) {
+  switch (kategori.toLowerCase()) {
+    case 'makan':
+      return Icons.restaurant;
+    case 'game':
+      return Icons.sports_esports;
+    case 'hadiah':
+      return Icons.card_giftcard;
+    case 'minuman':
+      return Icons.local_cafe;
+    case 'transport':
+      return Icons.directions_bus;
+    case 'gadget':
+      return Icons.smartphone;
+    case 'pribadi':
+      return Icons.person_outline;
+    case 'pendidikan':
+      return Icons.school;
+    default:
+      return Icons.category_outlined;
+  }
+}
+
+String _formatRupiah(String value) {
+  try {
+    final num = int.parse(value.replaceAll('.', ''));
+    final s = num.toString();
+    return s.replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]}.',
+    );
+  } catch (e) {
+    return value;
+  }
+}
+
+// ================== WIDGET: List builder transaksi dinamis ==================
+class _TransactionListBuilder extends GetView<HomeController> {
+  const _TransactionListBuilder();
+
+  @override
+  Widget build(BuildContext context) {
+    final transaksi = controller.transaksiList;
+
+    if (transaksi.isEmpty) {
+      return ListView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+        children: const [
+          SizedBox(height: 40),
+          Center(
+            child: Text(
+              'Tidak ada transaksi',
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Group transaksi berdasarkan tanggal
+    Map<String, List<dynamic>> groupedByDate = {};
+    for (var t in transaksi) {
+      final date = t.tanggal;
+      if (!groupedByDate.containsKey(date)) {
+        groupedByDate[date] = [];
+      }
+      groupedByDate[date]!.add(t);
+    }
+
+    // Sort tanggal descending
+    final sortedDates = groupedByDate.keys.toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    return ListView.separated(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+      itemCount: sortedDates.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final date = sortedDates[index];
+        final dayTransaksi = groupedByDate[date]!;
+
+        // Hitung total pengeluaran per hari
+        int totalPengeluaran = 0;
+        for (var t in dayTransaksi) {
+          if (t.tipe == 'pengeluaran') {
+            totalPengeluaran += int.tryParse(t.jumlah.replaceAll('.', '')) ?? 0;
+          }
+        }
+
+        // Format tanggal
+        final dateObj = DateTime.parse(date);
+        final dayName = _getDayName(dateObj.weekday);
+        final dateStr =
+            '${dayName.substring(0, 3)}, ${dateObj.day}/${dateObj.month}';
+
+        return _TransactionGroup(
+          headerLeft: dateStr,
+          headerRight: totalPengeluaran > 0
+              ? 'Pengeluaran : Rp${_formatRupiah(totalPengeluaran.toString())}'
+              : '',
+          items: dayTransaksi
+              .map((t) => _TxnTile(
+                    icon: _getIconForKategori(t.kategori),
+                    title: t.kategori.toUpperCase(),
+                    subtitle: t.keterangan,
+                    amount:
+                        '${t.tipe == 'pengeluaran' ? '-' : '+'}Rp${_formatRupiah(t.jumlah)}',
+                    bank: t.jenisDompet,
+                    transaksi: t, // Pass transaksi object untuk edit/delete
+                  ))
+              .toList(),
+        );
+      },
+    );
+  }
+
+  String _getDayName(int weekday) {
+    const days = [
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu'
+    ];
+    return days[weekday - 1];
   }
 }
