@@ -75,6 +75,7 @@ class AppPages {
     GetPage(
       name: Routes.BUKUMU,
       page: () => const BukumuView(),
+      binding: HomeBinding(),
     ),
     GetPage(
       name: Routes.PENGINGAT,

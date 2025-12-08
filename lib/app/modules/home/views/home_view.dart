@@ -248,7 +248,7 @@ class _BottomPlate extends StatelessWidget {
 }
 
 // ================== HEADER ==================
-class _HeaderGradient extends StatelessWidget {
+class _HeaderGradient extends GetView<HomeController> {
   const _HeaderGradient();
 
   @override
@@ -268,21 +268,25 @@ class _HeaderGradient extends StatelessWidget {
           padding: EdgeInsets.fromLTRB(20, safeTop + 12, 20, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              _HeaderTopRow(),
-              SizedBox(height: 14),
-              Text('Hi,Drest',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600)),
-              SizedBox(height: 6),
-              Text('Keuangan Drest',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      height: 1.1)),
+            children: [
+              const _HeaderTopRow(),
+              const SizedBox(height: 14),
+              Obx(
+                () => Text('Hi, ${controller.userName.value}',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600)),
+              ),
+              const SizedBox(height: 6),
+              Obx(
+                () => Text(controller.bookName.value,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        height: 1.1)),
+              ),
             ],
           ),
         ),
@@ -765,7 +769,7 @@ class _TransactionGroupState extends State<_TransactionGroup>
   }
 }
 
-class _TxnTile extends StatelessWidget {
+class _TxnTile extends GetView<HomeController> {
   final IconData icon;
   final String title, subtitle, amount, bank;
   const _TxnTile({
@@ -895,12 +899,14 @@ class _TxnTile extends StatelessWidget {
                 ),
 
                 // Buku
-                const Text(
-                  'Buku : Keuangan drest',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black54,
-                    height: 1.6,
+                Obx(
+                  () => Text(
+                    'Buku : ${controller.bookName.value}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                      height: 1.6,
+                    ),
                   ),
                 ),
 
