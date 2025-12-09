@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:your_money/app/modules/Dompet/controllers/dompet_controller.dart';
 import 'package:your_money/app/routes/app_routes.dart';
 
-class DompetView extends StatefulWidget {
+class DompetView extends GetView<DompetController> {
   final bool showBottomAndFab;
   const DompetView({super.key, this.showBottomAndFab = true});
 
-  @override
-  State<DompetView> createState() => _DompetViewState();
-}
-
-class _DompetViewState extends State<DompetView> {
   // THEME
   static const _blue = Color(0xFF1E88E5);
   static const _blueDark = Color(0xFF1565C0);
@@ -36,7 +32,7 @@ class _DompetViewState extends State<DompetView> {
             automaticallyImplyLeading: false,
             pinned: false,
             floating: false,
-            expandedHeight: 240, // fleksibel, cukup tinggi untuk teks
+            expandedHeight: 240,
             backgroundColor: _blue,
             elevation: 0,
             flexibleSpace: LayoutBuilder(
@@ -72,15 +68,18 @@ class _DompetViewState extends State<DompetView> {
                                 TextStyle(color: Colors.white70, fontSize: 14),
                           ),
                           const SizedBox(height: 8),
-                          const Text(
-                            'Rp0',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 36,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: .2,
-                            ),
-                          ),
+                          Obx(() {
+                            return Text(
+                              controller
+                                  .formatRupiah(controller.totalSaldo.value),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 36,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: .2,
+                              ),
+                            );
+                          }),
                         ],
                       ),
                     ),
@@ -101,19 +100,29 @@ class _DompetViewState extends State<DompetView> {
                 padding: const EdgeInsets.fromLTRB(_side, 16, _side, 16),
                 child: Column(
                   children: [
-                    _WalletCard(
-                      sectionTitle: 'Tunai',
-                      title: 'Tunai',
-                      trailing: 'Rp0',
-                      leadingIcon: Icons.account_balance_wallet_rounded,
-                    ),
+                    Obx(() => _WalletCard(
+                          sectionTitle: 'Tunai',
+                          title: 'Tunai',
+                          trailing: controller
+                              .formatRupiah(controller.saldoTunai.value),
+                          leadingIcon: Icons.account_balance_wallet_rounded,
+                        )),
                     const SizedBox(height: 12),
-                    _WalletCard(
-                      sectionTitle: 'Kartu Debit',
-                      title: 'Debit',
-                      trailing: 'Rp0',
-                      leadingIcon: Icons.credit_card_rounded,
-                    ),
+                    Obx(() => _WalletCard(
+                          sectionTitle: 'E-Wallet',
+                          title: 'E-Wallet',
+                          trailing: controller
+                              .formatRupiah(controller.saldoEWallet.value),
+                          leadingIcon: Icons.phone_android_rounded,
+                        )),
+                    const SizedBox(height: 12),
+                    Obx(() => _WalletCard(
+                          sectionTitle: 'Bank',
+                          title: 'Bank',
+                          trailing: controller
+                              .formatRupiah(controller.saldoBank.value),
+                          leadingIcon: Icons.credit_card_rounded,
+                        )),
                     SizedBox(height: _barH + (_fabSize / 2) + safe + 24),
                   ],
                 ),
@@ -124,10 +133,9 @@ class _DompetViewState extends State<DompetView> {
       ),
 
       // ===== FAB PENSIL =====
-      floatingActionButtonLocation: widget.showBottomAndFab
-          ? FloatingActionButtonLocation.centerDocked
-          : null,
-      floatingActionButton: widget.showBottomAndFab
+      floatingActionButtonLocation:
+          showBottomAndFab ? FloatingActionButtonLocation.centerDocked : null,
+      floatingActionButton: showBottomAndFab
           ? SizedBox(
               width: _fabSize,
               height: _fabSize,
@@ -150,7 +158,7 @@ class _DompetViewState extends State<DompetView> {
           : null,
 
       // ===== BOTTOM BAR =====
-      bottomNavigationBar: widget.showBottomAndFab
+      bottomNavigationBar: showBottomAndFab
           ? SizedBox(
               height: _barH + safe,
               child: Container(

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:your_money/app/data/models/transaksi.dart';
 import 'package:your_money/app/data/services/transaksi_service.dart';
 import 'package:your_money/app/modules/home/controllers/home_controller.dart';
+import 'package:your_money/app/modules/Dompet/controllers/dompet_controller.dart';
 import 'package:your_money/app/routes/app_routes.dart';
 
 class CatatKeuanganController extends GetxController {
@@ -139,7 +140,7 @@ class CatatKeuanganController extends GetxController {
     // Reset form
     _resetForm();
 
-    // Trigger refresh di HomeController SEBELUM back
+    // Trigger refresh di HomeController dan DompetController SEBELUM back
     try {
       final homeController = Get.find<HomeController>();
       print('[CatatKeuanganController] Refreshing home controller...');
@@ -147,6 +148,18 @@ class CatatKeuanganController extends GetxController {
       print('[CatatKeuanganController] Home controller refreshed!');
     } catch (e) {
       print('[CatatKeuanganController] HomeController error: $e');
+    }
+
+    // Refresh DompetController jika ada
+    try {
+      if (Get.isRegistered<DompetController>()) {
+        final dompetController = Get.find<DompetController>();
+        print('[CatatKeuanganController] Refreshing dompet controller...');
+        dompetController.refreshSaldo();
+        print('[CatatKeuanganController] Dompet controller refreshed!');
+      }
+    } catch (e) {
+      print('[CatatKeuanganController] DompetController error: $e');
     }
 
     // Navigasi langsung ke HOME (bukan Get.back)
