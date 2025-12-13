@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:your_money/app/modules/pengigat/controllers/pengingat_controller.dart';
+import 'package:your_money/app/modules/pengigat/models/pengingat_model.dart';
 
 class PengingatView extends StatefulWidget {
   const PengingatView({Key? key}) : super(key: key);
@@ -8,10 +11,11 @@ class PengingatView extends StatefulWidget {
 }
 
 class _PengingatViewState extends State<PengingatView> {
+  final controller = Get.find<PengingatController>();
   int hours = 0;
   int minutes = 0;
   bool notifikasiLokal = false;
-  String selectedPeriode = 'periode';
+  String selectedPeriode = 'Harian';
 
   @override
   Widget build(BuildContext context) {
@@ -24,35 +28,20 @@ class _PengingatViewState extends State<PengingatView> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Buat Pengingat',
+          'Pengingat',
           style: TextStyle(color: Colors.white),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.check, color: Colors.white),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Pengingat disimpan: ${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}'),
-                  backgroundColor: const Color(0xFF1E88E5),
-                ),
-              );
-              Navigator.pop(context);
-            },
-          ),
-        ],
       ),
       backgroundColor: Colors.grey[50],
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: Obx(
+        () => ListView(
+          padding: const EdgeInsets.all(16.0),
           children: [
             const Text(
-              'Pengingat',
+              'Buat Pengingat Baru',
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: Colors.black87,
               ),
             ),
@@ -106,7 +95,7 @@ class _PengingatViewState extends State<PengingatView> {
               child: SwitchListTile(
                 title: const Text(
                   'Notifikasi Lokal',
-                  style: TextStyle(fontSize: 16),
+                  style: TextStyle(fontSize: 14),
                 ),
                 value: notifikasiLokal,
                 onChanged: (value) {
@@ -118,7 +107,7 @@ class _PengingatViewState extends State<PengingatView> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             // Pilih Periode
             Container(
               decoration: BoxDecoration(
@@ -128,7 +117,7 @@ class _PengingatViewState extends State<PengingatView> {
               child: ListTile(
                 title: const Text(
                   'Pilih Periode',
-                  style: TextStyle(fontSize: 16),
+                  style: TextStyle(fontSize: 14),
                 ),
                 subtitle: Text(
                   selectedPeriode,
@@ -140,11 +129,59 @@ class _PengingatViewState extends State<PengingatView> {
                   color: Color(0xFF1E88E5),
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                onTap: () {
-                  _showPeriodeDialog();
-                },
+                onTap: () => _showPeriodeDialog(),
               ),
             ),
+            const SizedBox(height: 12),
+            // Tombol Simpan Pengingat
+            ElevatedButton(
+              onPressed: _savePengingat,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1E88E5),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Simpan Pengingat',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+            // Daftar Pengingat
+            const Text(
+              'Daftar Pengingat',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (controller.pengingatList.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Text(
+                    'Belum ada pengingat',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ),
+              )
+            else
+              Column(
+                children: controller.pengingatList.map((pengingat) {
+                  return _buildPengingatCard(pengingat);
+                }).toList(),
+              ),
           ],
         ),
       ),
@@ -170,6 +207,80 @@ class _PengingatViewState extends State<PengingatView> {
         ),
       ),
     );
+  }
+
+  Widget _buildPengingatCard(PengingatModel pengingat) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Colors.grey[200]!,
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        leading: Checkbox(
+          value: pengingat.isActive,
+          onChanged: (value) {
+            controller.togglePengingat(pengingat.id);
+          },
+          activeColor: const Color(0xFF1E88E5),
+        ),
+        title: Text(
+          pengingat.timeString,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        subtitle: Text(
+          pengingat.periode,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.grey,
+          ),
+        ),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete, color: Colors.redAccent, size: 20),
+          onPressed: () {
+            controller.deletePengingat(pengingat.id);
+          },
+        ),
+      ),
+    );
+  }
+
+  void _savePengingat() {
+    if (selectedPeriode == 'Harian' && selectedPeriode.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Silakan pilih periode terlebih dahulu'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    controller.addPengingat(hours, minutes, selectedPeriode);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Pengingat ${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')} (${selectedPeriode}) disimpan',
+        ),
+        backgroundColor: const Color(0xFF1E88E5),
+      ),
+    );
+
+    // Reset form
+    setState(() {
+      hours = 0;
+      minutes = 0;
+      selectedPeriode = 'Harian';
+      notifikasiLokal = false;
+    });
   }
 
   void _showScrollableTimePicker() {
@@ -277,7 +388,7 @@ class _PengingatViewState extends State<PengingatView> {
     required Function(int) onChanged,
   }) {
     final controller = FixedExtentScrollController(initialItem: initialIndex);
-    
+
     return ListWheelScrollView.useDelegate(
       controller: controller,
       itemExtent: 50,
@@ -294,7 +405,7 @@ class _PengingatViewState extends State<PengingatView> {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w500,
-                color: index == initialIndex 
+                color: index == initialIndex
                     ? const Color(0xFF1E88E5)
                     : Colors.grey,
               ),
@@ -307,7 +418,7 @@ class _PengingatViewState extends State<PengingatView> {
 
   void _showPeriodeDialog() {
     final periodeOptions = ['Harian', 'Mingguan', 'Bulanan', 'Tahunan'];
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
