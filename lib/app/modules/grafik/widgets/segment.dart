@@ -5,6 +5,7 @@ class Segment {
   final int percent; // 0-100
   final Color color;
   final int nominal;
+  
   const Segment({
     required this.name,
     required this.percent,
