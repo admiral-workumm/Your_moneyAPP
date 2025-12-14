@@ -72,6 +72,8 @@ class _DonutPainter extends CustomPainter {
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.butt;
 
+    final singleSegment = segments.length == 1;
+
     double start = -math.pi / 2; // start from top
     for (final s in segments) {
       final sweep = s.fraction * 2 * math.pi;
@@ -87,6 +89,11 @@ class _DonutPainter extends CustomPainter {
       final mid = start + sweep / 2;
       final centerRadius = radius - stroke / 2;
       final arcOuter = radius;
+
+      if (singleSegment) {
+        start += sweep;
+        continue;
+      }
 
       // percent text
       final pDx = center.dx + centerRadius * math.cos(mid);
@@ -113,7 +120,9 @@ class _DonutPainter extends CustomPainter {
             text: s.name,
             style: const TextStyle(fontSize: 13, color: Colors.black)),
         textDirection: TextDirection.ltr,
-      )..layout();
+        maxLines: 1,
+        ellipsis: '…',
+      )..layout(maxWidth: (size.width / 2) - 20);
       final nameRadius = arcOuter + 40.0;
       final nDx = center.dx + nameRadius * math.cos(mid);
       final nDy = center.dy + nameRadius * math.sin(mid);

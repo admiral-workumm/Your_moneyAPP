@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../grafik/controllers/grafik_controller.dart';
 
 class ShellController extends GetxController {
   final tabIndex = 0.obs;
@@ -7,6 +8,9 @@ class ShellController extends GetxController {
 
   void changeTab(int idx) {
     tabIndex.value = idx;
+    if (idx == 2 && Get.isRegistered<GrafikController>()) {
+      Get.find<GrafikController>().refreshData();
+    }
   }
 
   /// Set initial tab from incoming arguments only once.
