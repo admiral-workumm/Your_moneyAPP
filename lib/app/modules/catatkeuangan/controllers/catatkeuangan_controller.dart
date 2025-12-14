@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:your_money/app/data/models/transaksi.dart';
 import 'package:your_money/app/data/services/transaksi_service.dart';
 import 'package:your_money/app/modules/home/controllers/home_controller.dart';
+import 'package:your_money/app/modules/Dompet/controllers/dompet_controller.dart';
+import 'package:your_money/app/modules/grafik/controllers/grafik_controller.dart';
 import 'package:your_money/app/routes/app_routes.dart';
 
 class CatatKeuanganController extends GetxController {
@@ -133,6 +135,7 @@ class CatatKeuanganController extends GetxController {
         backgroundColor: Colors.green.withOpacity(0.9),
         colorText: Colors.white,
         snackPosition: SnackPosition.TOP,
+        duration: const Duration(milliseconds: 1500),
       );
     }
 
@@ -148,6 +151,34 @@ class CatatKeuanganController extends GetxController {
     } catch (e) {
       print('[CatatKeuanganController] HomeController error: $e');
     }
+
+    // Refresh Dompet controller jika sudah di-register
+    try {
+      if (Get.isRegistered<DompetController>()) {
+        final dompetController = Get.find<DompetController>();
+        print('[CatatKeuanganController] Refreshing dompet controller...');
+        dompetController.refreshSaldo();
+        print('[CatatKeuanganController] Dompet controller refreshed!');
+      }
+    } catch (e) {
+      print('[CatatKeuanganController] DompetController error: $e');
+    }
+
+    // Refresh Grafik controller jika sudah di-register
+    try {
+      if (Get.isRegistered<GrafikController>()) {
+        final grafikController = Get.find<GrafikController>();
+        print('[CatatKeuanganController] Refreshing grafik controller...');
+        grafikController.refreshData();
+        print('[CatatKeuanganController] Grafik controller refreshed!');
+      }
+    } catch (e) {
+      print('[CatatKeuanganController] GrafikController error: $e');
+    }
+
+    // Delay navigasi sampai snackbar selesai (1.5 detik) supaya tidak conflict
+    print('[CatatKeuanganController] Waiting for snackbar to finish...');
+    await Future.delayed(const Duration(milliseconds: 1600));
 
     // Navigasi langsung ke HOME (bukan Get.back)
     print('[CatatKeuanganController] Navigating back to HOME...');
