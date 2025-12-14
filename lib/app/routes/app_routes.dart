@@ -12,4 +12,6 @@ abstract class Routes {
   static const ANGGARAN = '/anggaran';
   static const BUKUMU = '/bukumu';
   static const PENGINGAT = '/pengingat';
+  static const PENGINGAT_LIST = '/pengingat-list';
+  static const PENGINGAT_FORM = '/pengingat-form';
 }

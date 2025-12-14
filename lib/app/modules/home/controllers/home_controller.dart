@@ -1,18 +1,24 @@
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:your_money/app/data/models/transaksi.dart';
+import 'package:your_money/app/data/services/transaksi_service.dart';
 
 class HomeController extends GetxController {
   final _box = GetStorage();
   final accounts = <Map<String, String>>[].obs;
+  final _transaksiService = TransaksiService();
 
   var userName = 'User'.obs;
   var bookName = 'My Book'.obs;
 
-  var saldoTotal = 1000000.obs;
-  var pemasukan = 500000.obs;
-  var pengeluaran = 200000.obs;
+  var saldoTotal = 0.obs;
+  var pemasukan = 0.obs;
+  var pengeluaran = 0.obs;
 
   var selectedDate = DateTime.now().obs;
+
+  // List untuk menampilkan transaksi bulan ini
+  var transaksiList = <Transaksi>[].obs;
 
   static const _accountsKey = 'accounts';
   static const _currentKey = 'currentAccount';
@@ -36,6 +42,45 @@ class HomeController extends GetxController {
 
     // Otherwise try to load last used account
     _loadCurrentAccount();
+
+    // Load transaksi
+    _loadTransaksi();
+
+    // Listen perubahan tanggal
+    ever(selectedDate, (_) {
+      _loadTransaksi();
+    });
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    // Refresh transaksi saat page ready/resume
+    refreshTransaksi();
+  }
+
+  /// Load transaksi bulan yang dipilih
+  void _loadTransaksi() {
+    final bulan = selectedDate.value;
+    print(
+        '[HomeController] Loading transaksi for ${bulan.year}-${bulan.month}');
+
+    transaksiList.assignAll(_transaksiService.getTransaksiByMonth(bulan));
+
+    print('[HomeController] Loaded ${transaksiList.length} transaksi');
+
+    // Hitung ulang saldo
+    pemasukan.value = _transaksiService.getTotalPemasukanMonth(bulan);
+    pengeluaran.value = _transaksiService.getTotalPengeluaranMonth(bulan);
+    saldoTotal.value = pemasukan.value - pengeluaran.value;
+
+    print(
+        '[HomeController] Pemasukan: ${pemasukan.value}, Pengeluaran: ${pengeluaran.value}');
+  }
+
+  /// Refresh transaksi (dipanggil saat page resume)
+  void refreshTransaksi() {
+    _loadTransaksi();
   }
 
   void _loadAccounts() {
