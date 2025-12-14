@@ -1,54 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-
-class CatatKeuanganController extends GetxController {
-  final jumlahC = TextEditingController();
-  final ketC = TextEditingController();
-  final tanggalC = TextEditingController();
-  final jenisDompet = RxnString();
-  final kategori = RxnString(); // id/label kategori terpilih
-
-  final dompetOptions = const ['Tunai', 'E-Wallet', 'Bank'];
-
-  @override
-  void onClose() {
-    jumlahC.dispose();
-    ketC.dispose();
-    tanggalC.dispose();
-    super.onClose();
-  }
-
-  void pickDate(BuildContext ctx) async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: ctx,
-      initialDate: now,
-      firstDate: DateTime(now.year - 3),
-      lastDate: DateTime(now.year + 3),
-    );
-    if (picked != null) {
-      tanggalC.text =
-          "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-    }
-  }
-
-  void onSimpan() {
-    // TODO: validasi & simpan
-    Get.back();
-  }
-}
+import '../controllers/catatkeuangan_controller.dart';
 
 class CatatKeuanganView extends GetView<CatatKeuanganController> {
   const CatatKeuanganView({super.key});
 
   // Warna & gaya agar match Figma
   static const _blue = Color(0xFF1E88E5);
-  static const _blueDark = Color(0xFF1565C0);
   static const _bg = Color(0xFFF7F7F7);
   static const _fieldFill = Color(0xFFF5F5F5);
   static const _border = Color(0xFFE0E0E0);
-  static const _muted = Color(0xFF6C6C6C);
 
   InputDecoration get _decoration => const InputDecoration(
         isDense: true,
@@ -112,11 +74,20 @@ class CatatKeuanganView extends GetView<CatatKeuanganController> {
   }
 }
 
-class _Header extends StatelessWidget {
+class _Header extends GetView<CatatKeuanganController> {
   const _Header();
 
   @override
   Widget build(BuildContext context) {
+    // Listen tab changes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final tabController = DefaultTabController.of(context);
+      tabController.addListener(() {
+        controller.tipeTransaksi.value =
+            tabController.index == 0 ? 'pengeluaran' : 'pemasukan';
+      });
+    });
+
     return Container(
       padding: const EdgeInsets.only(top: 12),
       decoration: const BoxDecoration(
@@ -142,19 +113,31 @@ class _Header extends StatelessWidget {
                         color: Colors.white),
                   ),
                   const SizedBox(width: 4),
-                  const Expanded(
-                    child: Text(
-                      'Catat Keuangan',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                  Expanded(
+                    child: Obx(() {
+                      final isEditing =
+                          controller.editingTransaksi.value != null;
+                      return Text(
+                        isEditing ? 'Edit Transaksi' : 'Catat Keuangan',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      );
+                    }),
                   ),
                   IconButton(
-                    onPressed: () =>
-                        Get.find<CatatKeuanganController>().onSimpan(),
+                    onPressed: () async {
+                      try {
+                        print('[CatatKeuanganView] Check button pressed');
+                        await Get.find<CatatKeuanganController>().onSimpan();
+                        print('[CatatKeuanganView] onSimpan completed');
+                      } catch (e) {
+                        print('[CatatKeuanganView] Error in onSimpan: $e');
+                        Get.snackbar('Error', 'Terjadi kesalahan: $e');
+                      }
+                    },
                     icon: const Icon(Icons.check, color: Colors.white),
                   ),
                 ],
@@ -340,7 +323,7 @@ class _KategoriGrid extends StatelessWidget {
   final CatatKeuanganController controller;
 
   static const _blue = Color(0xFF1E88E5);
-  static const _muted = Color(0xFF6C6C6C);
+  static const _gray = Color(0xFFBDBDBD);
 
   @override
   Widget build(BuildContext context) {
@@ -363,18 +346,41 @@ class _KategoriGrid extends StatelessWidget {
         runSpacing: 18,
         children: items.map((e) {
           final selected = controller.kategori.value == e.key;
-          return InkWell(
-            onTap: () => controller.kategori.value = e.key,
-            borderRadius: BorderRadius.circular(12),
-            child: SizedBox(
-              width: 48,
-              height: 48,
-              child: Icon(
-                e.icon,
-                size: 36,
-                color: selected ? _blue : _blue,
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InkWell(
+                onTap: () => controller.kategori.value = e.key,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color:
+                        selected ? _blue.withOpacity(0.15) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border:
+                        selected ? Border.all(color: _blue, width: 2) : null,
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    e.icon,
+                    size: 28,
+                    color: selected ? _blue : _gray,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 4),
+              Text(
+                e.key,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: selected ? _blue : _gray,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           );
         }).toList(),
       );

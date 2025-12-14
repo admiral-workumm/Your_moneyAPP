@@ -94,7 +94,6 @@ Sprint 4 – Integrasi Logika Bisnis Awal ( 8–14 Des 2025 )
 | 19 | Update Data Fitur Pengingat       | Rafi             | ✔️ Done |
 | 20 | Update Data Fitur Anggaran       | Riyo             | ⏳ Progres |
 
----
 
 ## 🚀 **Cara Menjalankan Aplikasi**
 
