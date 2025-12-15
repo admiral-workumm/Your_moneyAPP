@@ -90,10 +90,10 @@ Sprint 4 – Integrasi Logika Bisnis Awal ( 8–14 Des 2025 )
 | No | Fitur / Tugas                     | Penanggung Jawab | Status  |
 | -- | --------------------------------- | ---------------- | ------- |
 | 17 | Update Data Onboarding            | Admiral          | ✔️ Done |
-| 18 | Update Data Create Catatan & Card | Admiral          | ✔️ Done |
+| 18 | Update Data Catatan dan Grafik    | Admiral          | ✔️ Done |
 | 19 | Update Data Fitur Pengingat       | Rafi             | ✔️ Done |
 | 20 | Update Data Fitur Anggaran       | Riyo             | ⏳ Progres |
-| 21 | Update Data Grafik                | Admiral          | ✔️ Done |
+
 
 
 ## 🚀 **Cara Menjalankan Aplikasi**
