@@ -3,12 +3,16 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'app/routes/app_pages.dart';
+import 'app/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Init local storage for persisting accounts
   await GetStorage.init();
+
+  // Initialize notification service
+  await NotificationService().initialize();
 
   // Cek apakah onboarding sudah selesai
   final storage = GetStorage();

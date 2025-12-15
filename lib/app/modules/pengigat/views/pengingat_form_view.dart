@@ -200,6 +200,19 @@ class _PengingatFormViewState extends State<PengingatFormView> {
   }
 
   void _savePengingat() {
+    // Validasi: waktu pengingat harus diatur (tidak boleh 00:00)
+    if (hours == 0 && minutes == 0) {
+      Get.snackbar(
+        'Error',
+        'Silakan atur waktu pengingat terlebih dahulu',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 2),
+        icon: const Icon(Icons.error_outline, color: Colors.white),
+      );
+      return;
+    }
+
     controller.addPengingat(hours, minutes, selectedPeriode);
 
     Get.back();
