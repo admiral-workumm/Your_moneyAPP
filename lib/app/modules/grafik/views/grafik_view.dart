@@ -8,6 +8,7 @@ import '../widgets/segment.dart';
 import 'package:your_money/app/modules/anggaran/controllers/anggaran_controller.dart';
 import 'package:your_money/app/data/services/transaksi_service.dart';
 import 'package:your_money/app/data/models/anggaran.dart';
+import 'package:your_money/app/routes/app_routes.dart';
 
 enum ChartType { pengeluaran, pemasukan, anggaran }
 
@@ -65,6 +66,7 @@ class _GrafikViewState extends State<GrafikView> {
                     current:
                         _sumPengeluaran(a.category, a.startDate, a.endDate),
                     limit: a.limit,
+                    source: a,
                   ))
               .toList();
         }
@@ -229,6 +231,7 @@ class _GrafikViewState extends State<GrafikView> {
                                     padding: const EdgeInsets.only(bottom: 16),
                                     child: _BudgetCard(
                                       budget: b,
+                                      onTap: () => _openDetail(b),
                                       onDelete: () => _deleteBudget(b.id),
                                     ),
                                   ))
@@ -249,6 +252,13 @@ class _GrafikViewState extends State<GrafikView> {
   String _amountFor(Segment s) => controller.formatRupiah(s.nominal);
 
   String _totalLabel(int total) => controller.formatRupiah(total);
+
+  void _openDetail(_Budget b) {
+    Get.toNamed(Routes.ANGGARAN_DETAIL, arguments: {
+      'anggaran': b.source,
+      'current': b.current,
+    });
+  }
 
   Future<void> _deleteBudget(String id) async {
     try {
@@ -363,6 +373,7 @@ class _Budget {
   final DateTime end;
   final int current;
   final int limit;
+  final Anggaran source;
   const _Budget({
     required this.id,
     required this.name,
@@ -370,6 +381,7 @@ class _Budget {
     required this.end,
     required this.current,
     required this.limit,
+    required this.source,
   });
   double get progress => limit == 0 ? 0 : current / limit;
 }
@@ -378,8 +390,9 @@ class _Budget {
 class _BudgetCard extends StatelessWidget {
   final _Budget budget;
   final VoidCallback? onDelete;
+  final VoidCallback? onTap;
   static const _blue = Color(0xFF0D6EFF);
-  const _BudgetCard({required this.budget, this.onDelete});
+  const _BudgetCard({required this.budget, this.onDelete, this.onTap});
 
   String _fmt(int v) => v
       .toString()
@@ -390,121 +403,126 @@ class _BudgetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x14000000), blurRadius: 10, offset: Offset(0, 4))
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(budget.name,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600)),
-              ),
-              Column(
-                children: const [
-                  Icon(Icons.notifications_active_outlined, color: _blue),
-                  SizedBox(height: 4),
-                  Text('Anggaran',
-                      style: TextStyle(
-                          color: _blue,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600)),
-                ],
-              ),
-              if (onDelete != null)
-                PopupMenuButton<String>(
-                  onSelected: (val) {
-                    if (val == 'delete') onDelete?.call();
-                  },
-                  itemBuilder: (context) => const [
-                    PopupMenuItem(value: 'delete', child: Text('Hapus')),
-                  ],
-                  child: const Padding(
-                    padding: EdgeInsets.only(left: 8),
-                    child: Icon(Icons.more_vert, color: Colors.black54),
-                  ),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [
+            BoxShadow(
+                color: Color(0x14000000), blurRadius: 10, offset: Offset(0, 4))
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(budget.name,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600)),
                 ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              const Icon(Icons.calendar_today_outlined, size: 18, color: _blue),
-              const SizedBox(width: 8),
-              Text('${_dateFmt(budget.start)} ~ ${_dateFmt(budget.end)}',
-                  style: const TextStyle(fontSize: 13)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          LayoutBuilder(
-            builder: (context, c) {
-              final pct = budget.progress.clamp(0, 1);
-              final barWidth = c.maxWidth;
-              final filled = barWidth * pct;
-              return Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    height: 26,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(30),
+                Column(
+                  children: const [
+                    Icon(Icons.notifications_active_outlined, color: _blue),
+                    SizedBox(height: 4),
+                    Text('Anggaran',
+                        style: TextStyle(
+                            color: _blue,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600)),
+                  ],
+                ),
+                if (onDelete != null)
+                  PopupMenuButton<String>(
+                    onSelected: (val) {
+                      if (val == 'delete') onDelete?.call();
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(value: 'delete', child: Text('Hapus')),
+                    ],
+                    child: const Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: Icon(Icons.more_vert, color: Colors.black54),
                     ),
                   ),
-                  Positioned(
-                    left: 0,
-                    child: Container(
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(Icons.calendar_today_outlined,
+                    size: 18, color: _blue),
+                const SizedBox(width: 8),
+                Text('${_dateFmt(budget.start)} ~ ${_dateFmt(budget.end)}',
+                    style: const TextStyle(fontSize: 13)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            LayoutBuilder(
+              builder: (context, c) {
+                final pct = budget.progress.clamp(0, 1);
+                final barWidth = c.maxWidth;
+                final filled = barWidth * pct;
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
                       height: 26,
-                      width: filled,
                       decoration: BoxDecoration(
-                        color: _blue,
+                        color: Colors.grey.shade300,
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Row(
-                      children: [
-                        Text('Rp ${_fmt(budget.current)}',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600)),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
+                    Positioned(
+                      left: 0,
+                      child: Container(
+                        height: 26,
+                        width: filled,
+                        decoration: BoxDecoration(
+                          color: _blue,
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Row(
+                        children: [
+                          Text('Rp ${_fmt(budget.current)}',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600)),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text('${(pct * 100).round()}%',
+                                style: const TextStyle(
+                                    fontSize: 12, fontWeight: FontWeight.w600)),
                           ),
-                          child: Text('${(pct * 100).round()}%',
+                          const Spacer(),
+                          Text('Rp ${_fmt(budget.limit)}',
                               style: const TextStyle(
                                   fontSize: 12, fontWeight: FontWeight.w600)),
-                        ),
-                        const Spacer(),
-                        Text('Rp ${_fmt(budget.limit)}',
-                            style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w600)),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
