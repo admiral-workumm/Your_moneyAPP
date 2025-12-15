@@ -15,6 +15,22 @@ class AnggaranService {
     }
   }
 
+  Future<void> deleteAnggaran(String id) async {
+    try {
+      final List<dynamic> stored = _box.read(_key) ?? [];
+      stored.removeWhere((e) {
+        if (e is Map) {
+          final map = Map<String, dynamic>.from(e);
+          return map['id'] == id;
+        }
+        return false;
+      });
+      await _box.write(_key, stored);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   List<Anggaran> getAll() {
     try {
       final List<dynamic> stored = _box.read(_key) ?? [];
@@ -25,6 +41,25 @@ class AnggaranService {
     } catch (e) {
       // if storage malformed, return empty safe default
       return [];
+    }
+  }
+
+  Future<void> updateAnggaran(Anggaran updated) async {
+    try {
+      final List<dynamic> stored = _box.read(_key) ?? [];
+      final list = stored
+          .whereType<Map>()
+          .map((m) => Map<String, dynamic>.from(m))
+          .toList();
+      final idx = list.indexWhere((m) => m['id'] == updated.id);
+      if (idx != -1) {
+        list[idx] = updated.toMap();
+      } else {
+        list.add(updated.toMap());
+      }
+      await _box.write(_key, list);
+    } catch (e) {
+      rethrow;
     }
   }
 

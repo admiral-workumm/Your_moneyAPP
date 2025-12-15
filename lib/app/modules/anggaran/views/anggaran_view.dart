@@ -158,8 +158,15 @@ class _AnggaranViewState extends State<AnggaranView> {
 
                 anggaranCtrl.add(a).then((_) {
                   Get.back<void>();
-                  Get.snackbar('Sukses', 'Anggaran disimpan',
-                      snackPosition: SnackPosition.BOTTOM);
+                  Get.snackbar(
+                    'Sukses',
+                    'Anggaran disimpan',
+                    snackPosition: SnackPosition.TOP,
+                    backgroundColor: Colors.green.shade600,
+                    colorText: Colors.white,
+                    margin: const EdgeInsets.all(12),
+                    borderRadius: 12,
+                  );
                 }).catchError((e) {
                   // Silent failure per requirement: no notifications
                 });

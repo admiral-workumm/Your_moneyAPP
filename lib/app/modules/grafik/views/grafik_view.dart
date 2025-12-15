@@ -58,6 +58,7 @@ class _GrafikViewState extends State<GrafikView> {
               anggaranController.list, controller.selectedDate.value);
           _budgets = monthBudgets
               .map((a) => _Budget(
+                    id: a.id,
                     name: a.name,
                     start: a.startDate,
                     end: a.endDate,
@@ -226,7 +227,10 @@ class _GrafikViewState extends State<GrafikView> {
                           children: _budgets
                               .map((b) => Padding(
                                     padding: const EdgeInsets.only(bottom: 16),
-                                    child: _BudgetCard(budget: b),
+                                    child: _BudgetCard(
+                                      budget: b,
+                                      onDelete: () => _deleteBudget(b.id),
+                                    ),
                                   ))
                               .toList(),
                         ),
@@ -245,6 +249,13 @@ class _GrafikViewState extends State<GrafikView> {
   String _amountFor(Segment s) => controller.formatRupiah(s.nominal);
 
   String _totalLabel(int total) => controller.formatRupiah(total);
+
+  Future<void> _deleteBudget(String id) async {
+    try {
+      await anggaranController.delete(id);
+      setState(() {});
+    } catch (_) {}
+  }
 
   List<Anggaran> _filterBudgetsForMonth(List<Anggaran> list, DateTime month) {
     final monthStart = DateTime(month.year, month.month, 1);
@@ -346,12 +357,14 @@ class _EmptyState extends StatelessWidget {
 
 // Budget model
 class _Budget {
+  final String id;
   final String name;
   final DateTime start;
   final DateTime end;
   final int current;
   final int limit;
   const _Budget({
+    required this.id,
     required this.name,
     required this.start,
     required this.end,
@@ -364,8 +377,9 @@ class _Budget {
 // Budget card widget
 class _BudgetCard extends StatelessWidget {
   final _Budget budget;
+  final VoidCallback? onDelete;
   static const _blue = Color(0xFF0D6EFF);
-  const _BudgetCard({required this.budget});
+  const _BudgetCard({required this.budget, this.onDelete});
 
   String _fmt(int v) => v
       .toString()
@@ -407,6 +421,19 @@ class _BudgetCard extends StatelessWidget {
                           fontWeight: FontWeight.w600)),
                 ],
               ),
+              if (onDelete != null)
+                PopupMenuButton<String>(
+                  onSelected: (val) {
+                    if (val == 'delete') onDelete?.call();
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(value: 'delete', child: Text('Hapus')),
+                  ],
+                  child: const Padding(
+                    padding: EdgeInsets.only(left: 8),
+                    child: Icon(Icons.more_vert, color: Colors.black54),
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 12),

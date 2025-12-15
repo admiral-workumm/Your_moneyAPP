@@ -24,4 +24,22 @@ class AnggaranController extends GetxController {
       rethrow;
     }
   }
+
+  Future<void> delete(String id) async {
+    try {
+      await _service.deleteAnggaran(id);
+      load();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateAnggaran(Anggaran a) async {
+    try {
+      await _service.updateAnggaran(a);
+      load();
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
