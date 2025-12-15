@@ -53,6 +53,7 @@ class KategoriView extends StatelessWidget {
                 arguments: {
                   'label': item.label,
                   'icon': item.icon,
+                  'kategori': item.label,
                 },
               );
             },
