@@ -1040,22 +1040,26 @@ IconData _getIconForKategori(String kategori) {
   switch (kategori.toLowerCase()) {
     case 'makan':
       return Icons.restaurant;
-    case 'game':
+    case 'hiburan':
       return Icons.sports_esports;
-    case 'hadiah':
-      return Icons.card_giftcard;
-    case 'minuman':
-      return Icons.local_cafe;
-    case 'transport':
+    case 'transportasi':
       return Icons.directions_bus;
-    case 'gadget':
+    case 'belanja':
+      return Icons.shopping_bag;
+    case 'komunikasi':
       return Icons.smartphone;
-    case 'pribadi':
-      return Icons.person_outline;
+    case 'kesehatan':
+      return Icons.medical_services;
     case 'pendidikan':
       return Icons.school;
+    case 'home':
+      return Icons.home;
+    case 'keluarga':
+      return Icons.groups;
+    case 'lainnya':
+      return Icons.category;
     default:
-      return Icons.category_outlined;
+      return Icons.category;
   }
 }
 
