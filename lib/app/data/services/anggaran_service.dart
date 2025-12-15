@@ -11,7 +11,7 @@ class AnggaranService {
       stored.add(a.toMap());
       await _box.write(_key, stored);
     } catch (e) {
-      // ignore for now, or log
+      rethrow; // bubble up for UI to handle
     }
   }
 
@@ -23,6 +23,7 @@ class AnggaranService {
           .map((m) => Anggaran.fromMap(Map<String, dynamic>.from(m)))
           .toList();
     } catch (e) {
+      // if storage malformed, return empty safe default
       return [];
     }
   }

@@ -17,7 +17,11 @@ class AnggaranController extends GetxController {
   }
 
   Future<void> add(Anggaran a) async {
-    await _service.addAnggaran(a);
-    load();
+    try {
+      await _service.addAnggaran(a);
+      load();
+    } catch (e) {
+      rethrow;
+    }
   }
 }
