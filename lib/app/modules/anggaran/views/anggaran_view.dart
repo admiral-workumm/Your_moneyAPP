@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:your_money/app/data/models/anggaran.dart';
+import 'package:your_money/app/modules/anggaran/controllers/anggaran_controller.dart';
 
 class AnggaranView extends StatefulWidget {
   const AnggaranView({super.key});
@@ -16,6 +18,11 @@ class _AnggaranViewState extends State<AnggaranView> {
 
   String? _period; // Jenis Periode
 
+  bool _nameError = false;
+  bool _amountError = false;
+  bool _categoryError = false;
+  bool _dateError = false;
+
   static const Color _blue = Color(0xFF1E88E5);
 
   @override
@@ -27,7 +34,8 @@ class _AnggaranViewState extends State<AnggaranView> {
     super.dispose();
   }
 
-  InputDecoration _inputDecoration(String hint, {Widget? suffixIcon}) {
+  InputDecoration _inputDecoration(String hint,
+      {Widget? suffixIcon, bool isError = false}) {
     return InputDecoration(
       hintText: hint,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -35,11 +43,13 @@ class _AnggaranViewState extends State<AnggaranView> {
       fillColor: Colors.white,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderSide: BorderSide(
+            color: isError ? Colors.red.shade400 : Colors.grey.shade300),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: _blue, width: 1.2),
+        borderSide: BorderSide(
+            color: isError ? Colors.red.shade600 : _blue, width: 1.2),
       ),
       suffixIcon: suffixIcon,
     );
@@ -64,6 +74,10 @@ class _AnggaranViewState extends State<AnggaranView> {
 
   @override
   Widget build(BuildContext context) {
+    if (!Get.isRegistered<AnggaranController>()) {
+      Get.put(AnggaranController());
+    }
+    final anggaranCtrl = Get.find<AnggaranController>();
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F6),
       appBar: AppBar(
@@ -79,8 +93,86 @@ class _AnggaranViewState extends State<AnggaranView> {
           IconButton(
             icon: const Icon(Icons.check, color: Colors.white),
             onPressed: () {
-              // TODO: Save anggaran
-              Get.back<void>();
+              try {
+                final name = _nameCtrl.text.trim();
+                final amountStr = _amountCtrl.text.replaceAll('.', '').trim();
+                final category = _categoryCtrl.text.trim();
+                final period = _period ?? 'Bulanan';
+                final dateText = _dateCtrl.text.trim();
+
+                // Reset error flags
+                _nameError = name.isEmpty;
+                _amountError = amountStr.isEmpty;
+                _categoryError = category.isEmpty;
+                _dateError = dateText.isEmpty;
+                setState(() {});
+                if (_nameError ||
+                    _amountError ||
+                    _categoryError ||
+                    _dateError) {
+                  return; // do not proceed, errors are shown via red borders
+                }
+
+                final limit = int.tryParse(amountStr) ?? 0;
+                if (limit <= 0) {
+                  _amountError = true;
+                  setState(() {});
+                  return;
+                }
+
+                // Parse dd/MM/yyyy
+                DateTime? start;
+                try {
+                  final parts = dateText.split('/');
+                  final d = int.parse(parts[0]);
+                  final m = int.parse(parts[1]);
+                  final y = int.parse(parts[2]);
+                  start = DateTime(y, m, d);
+                } catch (_) {}
+                if (start == null) {
+                  _dateError = true;
+                  setState(() {});
+                  return;
+                }
+
+                DateTime end;
+                switch (period) {
+                  case 'Harian':
+                    end = start;
+                    break;
+                  case 'Mingguan':
+                    end = start.add(const Duration(days: 6));
+                    break;
+                  default: // Bulanan
+                    end = DateTime(start.year, start.month + 1, 0);
+                }
+
+                final a = Anggaran.newBudget(
+                  name: name,
+                  limit: limit,
+                  category: category,
+                  period: period,
+                  startDate: start,
+                  endDate: end,
+                );
+
+                anggaranCtrl.add(a).then((_) {
+                  Get.back<void>();
+                  Get.snackbar(
+                    'Sukses',
+                    'Anggaran disimpan',
+                    snackPosition: SnackPosition.TOP,
+                    backgroundColor: Colors.green.shade600,
+                    colorText: Colors.white,
+                    margin: const EdgeInsets.all(12),
+                    borderRadius: 12,
+                  );
+                }).catchError((e) {
+                  // Silent failure per requirement: no notifications
+                });
+              } catch (e) {
+                // Silent failure per requirement
+              }
             },
           )
         ],
@@ -100,7 +192,7 @@ class _AnggaranViewState extends State<AnggaranView> {
             const SizedBox(height: 8),
             TextField(
               controller: _nameCtrl,
-              decoration: _inputDecoration('Masukan nama'),
+              decoration: _inputDecoration('Masukan nama', isError: _nameError),
             ),
             const SizedBox(height: 16),
             const Text('Jumlah Anggran'),
@@ -108,14 +200,16 @@ class _AnggaranViewState extends State<AnggaranView> {
             TextField(
               controller: _amountCtrl,
               keyboardType: TextInputType.number,
-              decoration: _inputDecoration('Masukan jumlah'),
+              decoration:
+                  _inputDecoration('Masukan jumlah', isError: _amountError),
             ),
             const SizedBox(height: 16),
             const Text('Kategori'),
             const SizedBox(height: 8),
             TextField(
               controller: _categoryCtrl,
-              decoration: _inputDecoration('Masukan Kategori'),
+              decoration:
+                  _inputDecoration('Masukan Kategori', isError: _categoryError),
             ),
             const SizedBox(height: 16),
             const Text('Jenis Periode'),
@@ -139,7 +233,8 @@ class _AnggaranViewState extends State<AnggaranView> {
               readOnly: true,
               onTap: _pickDate,
               decoration: _inputDecoration('Pilih tanggal',
-                  suffixIcon: const Icon(Icons.calendar_today_outlined)),
+                  suffixIcon: const Icon(Icons.calendar_today_outlined),
+                  isError: _dateError),
             ),
           ],
         ),
