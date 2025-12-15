@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import '../controllers/detail_kategori_controller.dart';
 
 class DetailKategoriView extends GetView<DetailKategoriController> {
@@ -73,8 +74,10 @@ class _SummaryCard extends GetView<DetailKategoriController> {
                         style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 4),
-                    Text('Keuangan drest',
-                        style: TextStyle(color: Colors.grey[600])),
+                    Obx(() => Text(
+                          'Total ${controller.totalTransactions} transaksi',
+                          style: TextStyle(color: Colors.grey[600]),
+                        )),
                   ],
                 ),
               ),
@@ -109,43 +112,46 @@ class _SummaryCard extends GetView<DetailKategoriController> {
                 ],
               )),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('2',
-                      style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.green,
-                          fontWeight: FontWeight.w600)),
-                  SizedBox(height: 4),
-                  Text('Kuantitas', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-              const Spacer(),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+          Obx(() => Row(
                 children: [
-                  const Text('-Rp50,000',
-                      style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.red,
-                          fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.credit_card,
-                          size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 6),
-                      Text('Total', style: TextStyle(color: Colors.grey[600])),
+                      Text(controller.totalTransactions.toString(),
+                          style: const TextStyle(
+                              fontSize: 18,
+                              color: Colors.green,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 4),
+                      const Text('Kuantitas',
+                          style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                  const Spacer(),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                          '-Rp${controller.totalPengeluaran.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (Match m) => '.')}',
+                          style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.red,
+                              fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.credit_card,
+                              size: 16, color: Colors.grey[600]),
+                          const SizedBox(width: 6),
+                          Text('Total',
+                              style: TextStyle(color: Colors.grey[600])),
+                        ],
+                      ),
                     ],
                   ),
                 ],
-              ),
-            ],
-          ),
+              )),
         ],
       ),
     );
@@ -159,89 +165,158 @@ class _TransactionsCard extends GetView<DetailKategoriController> {
   const _TransactionsCard(
       {required this.accent, required this.icon, required this.title});
 
+  String _formatDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      final formatter = DateFormat('EEE, dd/MM', 'id_ID');
+      return formatter.format(date);
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  double _calculateDayTotal(List transaksi) {
+    double total = 0;
+    for (var txn in transaksi) {
+      final amount =
+          double.tryParse(txn.jumlah.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
+      total += amount;
+    }
+    return total;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final dateKey = '2025-10-10';
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header bar - Clickable
-          InkWell(
-            onTap: () => controller.toggleDateExpansion(dateKey),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
+    return Obx(() {
+      if (controller.transactionsByDate.isEmpty) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 5),
               ),
-              child: Obx(() => Row(
-                    children: [
-                      AnimatedRotation(
-                        turns: controller.isDateExpanded(dateKey) ? 0 : -0.25,
-                        duration: const Duration(milliseconds: 200),
-                        child: Icon(Icons.arrow_drop_down,
-                            color: accent, size: 20),
-                      ),
-                      const SizedBox(width: 4),
-                      const Text('Min, 10/10',
-                          style: TextStyle(fontWeight: FontWeight.w600)),
-                      const Spacer(),
-                      Text('Pengeluaran : Rp100,000',
-                          style: TextStyle(
-                              color: Colors.grey[700],
-                              fontWeight: FontWeight.w500)),
-                    ],
-                  )),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              'Belum ada transaksi untuk kategori ini',
+              style: TextStyle(color: Colors.grey[500]),
             ),
           ),
-          // Items - Collapsible
-          Obx(() => AnimatedCrossFade(
-                duration: const Duration(milliseconds: 200),
-                crossFadeState: controller.isDateExpanded(dateKey)
-                    ? CrossFadeState.showFirst
-                    : CrossFadeState.showSecond,
-                firstChild: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  child: Column(
-                    children: [
-                      _TxRow(
-                          accent: accent,
-                          icon: icon,
-                          title: title,
-                          subtitle: 'Mie Goreng',
-                          amount: '-Rp20,000',
-                          account: 'BCA'),
-                      const Divider(height: 1),
-                      _TxRow(
-                          accent: accent,
-                          icon: icon,
-                          title: title,
-                          subtitle: 'Burger',
-                          amount: '-Rp30,000',
-                          account: 'BCA'),
-                    ],
+        );
+      }
+
+      return Column(
+        children: controller.transactionsByDate.entries.map((entry) {
+          final dateKey = entry.key;
+          final transactions = entry.value;
+          final dayTotal = _calculateDayTotal(transactions);
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 8,
+                    offset: const Offset(0, 5),
                   ),
-                ),
-                secondChild: const SizedBox.shrink(),
-              )),
-        ],
-      ),
-    );
+                ],
+              ),
+              child: Column(
+                children: [
+                  // Header bar - Clickable
+                  InkWell(
+                    onTap: () => controller.toggleDateExpansion(dateKey),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16)),
+                      ),
+                      child: Row(
+                        children: [
+                          Obx(() => AnimatedRotation(
+                                turns: controller.isDateExpanded(dateKey)
+                                    ? 0
+                                    : -0.25,
+                                duration: const Duration(milliseconds: 200),
+                                child: Icon(Icons.arrow_drop_down,
+                                    color: accent, size: 20),
+                              )),
+                          const SizedBox(width: 4),
+                          Text(_formatDate(dateKey),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600)),
+                          const Spacer(),
+                          Text(
+                              'Rp${dayTotal.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (Match m) => '.')}',
+                              style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.w500)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Items - Collapsible
+                  Obx(() => AnimatedCrossFade(
+                        duration: const Duration(milliseconds: 200),
+                        crossFadeState: controller.isDateExpanded(dateKey)
+                            ? CrossFadeState.showFirst
+                            : CrossFadeState.showSecond,
+                        firstChild: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          child: Column(
+                            children: List.generate(
+                              transactions.length,
+                              (index) {
+                                final txn = transactions[index];
+                                return Padding(
+                                  padding: EdgeInsets.only(
+                                    bottom:
+                                        index < transactions.length - 1 ? 8 : 0,
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      _TxRow(
+                                        accent: accent,
+                                        icon: icon,
+                                        title: title,
+                                        subtitle: txn.keterangan,
+                                        amount: '-Rp${txn.jumlah}',
+                                        account: txn.jenisDompet,
+                                      ),
+                                      if (index < transactions.length - 1)
+                                        const Divider(height: 1),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        secondChild: const SizedBox.shrink(),
+                      )),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      );
+    });
   }
 }
 
