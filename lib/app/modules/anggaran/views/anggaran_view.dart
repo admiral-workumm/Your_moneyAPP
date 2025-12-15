@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:your_money/app/data/models/anggaran.dart';
+import 'package:your_money/app/modules/anggaran/controllers/anggaran_controller.dart';
 
 class AnggaranView extends StatefulWidget {
   const AnggaranView({super.key});
@@ -64,6 +66,10 @@ class _AnggaranViewState extends State<AnggaranView> {
 
   @override
   Widget build(BuildContext context) {
+    if (!Get.isRegistered<AnggaranController>()) {
+      Get.put(AnggaranController());
+    }
+    final anggaranCtrl = Get.find<AnggaranController>();
     return Scaffold(
       backgroundColor: const Color(0xFFF6F6F6),
       appBar: AppBar(
@@ -79,8 +85,69 @@ class _AnggaranViewState extends State<AnggaranView> {
           IconButton(
             icon: const Icon(Icons.check, color: Colors.white),
             onPressed: () {
-              // TODO: Save anggaran
-              Get.back<void>();
+              final name = _nameCtrl.text.trim();
+              final amountStr = _amountCtrl.text.replaceAll('.', '').trim();
+              final category = _categoryCtrl.text.trim();
+              final period = _period ?? 'Bulanan';
+              final dateText = _dateCtrl.text.trim();
+
+              if (name.isEmpty ||
+                  amountStr.isEmpty ||
+                  category.isEmpty ||
+                  dateText.isEmpty) {
+                Get.snackbar('Validasi', 'Lengkapi semua field',
+                    snackPosition: SnackPosition.BOTTOM);
+                return;
+              }
+
+              final limit = int.tryParse(amountStr) ?? 0;
+              if (limit <= 0) {
+                Get.snackbar('Validasi', 'Jumlah anggaran tidak valid',
+                    snackPosition: SnackPosition.BOTTOM);
+                return;
+              }
+
+              // Parse dd/MM/yyyy
+              DateTime? start;
+              try {
+                final parts = dateText.split('/');
+                final d = int.parse(parts[0]);
+                final m = int.parse(parts[1]);
+                final y = int.parse(parts[2]);
+                start = DateTime(y, m, d);
+              } catch (_) {}
+              if (start == null) {
+                Get.snackbar('Validasi', 'Tanggal tidak valid',
+                    snackPosition: SnackPosition.BOTTOM);
+                return;
+              }
+
+              DateTime end;
+              switch (period) {
+                case 'Harian':
+                  end = start;
+                  break;
+                case 'Mingguan':
+                  end = start.add(const Duration(days: 6));
+                  break;
+                default: // Bulanan
+                  end = DateTime(start.year, start.month + 1, 0);
+              }
+
+              final a = Anggaran.newBudget(
+                name: name,
+                limit: limit,
+                category: category,
+                period: period,
+                startDate: start,
+                endDate: end,
+              );
+
+              anggaranCtrl.add(a).then((_) {
+                Get.back<void>();
+                Get.snackbar('Sukses', 'Anggaran disimpan',
+                    snackPosition: SnackPosition.BOTTOM);
+              });
             },
           )
         ],

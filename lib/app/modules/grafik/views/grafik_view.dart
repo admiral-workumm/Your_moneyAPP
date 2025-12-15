@@ -5,6 +5,9 @@ import '../controllers/grafik_controller.dart';
 import '../widgets/donut_chart.dart';
 import '../widgets/small_chip.dart';
 import '../widgets/segment.dart';
+import 'package:your_money/app/modules/anggaran/controllers/anggaran_controller.dart';
+import 'package:your_money/app/data/services/transaksi_service.dart';
+import 'package:your_money/app/data/models/anggaran.dart';
 
 enum ChartType { pengeluaran, pemasukan, anggaran }
 
@@ -20,18 +23,12 @@ class _GrafikViewState extends State<GrafikView> {
   static const _blueDark = Color(0xFF1565C0);
 
   late final GrafikController controller;
+  late final AnggaranController anggaranController;
+  final _transaksiService = TransaksiService();
 
   ChartType chartType = ChartType.pengeluaran;
 
-  final List<_Budget> _budgets = [
-    _Budget(
-      name: 'Makan Mingguan',
-      start: DateTime(2025, 1, 20),
-      end: DateTime(2025, 1, 25),
-      current: 100000,
-      limit: 200000,
-    ),
-  ];
+  List<_Budget> _budgets = const [];
 
   @override
   void initState() {
@@ -40,6 +37,11 @@ class _GrafikViewState extends State<GrafikView> {
       Get.put(GrafikController());
     }
     controller = Get.find<GrafikController>();
+
+    if (!Get.isRegistered<AnggaranController>()) {
+      Get.put(AnggaranController());
+    }
+    anggaranController = Get.find<AnggaranController>();
   }
 
   @override
@@ -50,6 +52,21 @@ class _GrafikViewState extends State<GrafikView> {
     return Scaffold(
       backgroundColor: const Color(0xFFF2F2F2),
       body: Obx(() {
+        // Build budgets for current month when needed
+        if (chartType == ChartType.anggaran) {
+          final monthBudgets = _filterBudgetsForMonth(
+              anggaranController.list, controller.selectedDate.value);
+          _budgets = monthBudgets
+              .map((a) => _Budget(
+                    name: a.name,
+                    start: a.startDate,
+                    end: a.endDate,
+                    current:
+                        _sumPengeluaran(a.category, a.startDate, a.endDate),
+                    limit: a.limit,
+                  ))
+              .toList();
+        }
         final segments = chartType == ChartType.pengeluaran
             ? controller.pengeluaranSegments
             : controller.pemasukanSegments;
@@ -201,14 +218,18 @@ class _GrafikViewState extends State<GrafikView> {
                         ),
                       ],
                     ] else ...[
-                      Column(
-                        children: _budgets
-                            .map((b) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 16),
-                                  child: _BudgetCard(budget: b),
-                                ))
-                            .toList(),
-                      ),
+                      if (_budgets.isEmpty)
+                        const _EmptyState(
+                            label: 'Belum ada anggaran untuk bulan ini'),
+                      if (_budgets.isNotEmpty)
+                        Column(
+                          children: _budgets
+                              .map((b) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: _BudgetCard(budget: b),
+                                  ))
+                              .toList(),
+                        ),
                     ],
                     const SizedBox(height: 12),
                   ],
@@ -224,6 +245,38 @@ class _GrafikViewState extends State<GrafikView> {
   String _amountFor(Segment s) => controller.formatRupiah(s.nominal);
 
   String _totalLabel(int total) => controller.formatRupiah(total);
+
+  List<Anggaran> _filterBudgetsForMonth(List<Anggaran> list, DateTime month) {
+    final monthStart = DateTime(month.year, month.month, 1);
+    final monthEnd = DateTime(month.year, month.month + 1, 0);
+    return list.where((a) {
+      final s = a.startDate;
+      final e = a.endDate;
+      final overlaps = !(e.isBefore(monthStart) || s.isAfter(monthEnd));
+      return overlaps;
+    }).toList();
+  }
+
+  int _sumPengeluaran(String category, DateTime start, DateTime end) {
+    final all = _transaksiService.getAllTransaksi();
+    int total = 0;
+    for (final t in all) {
+      if (t.tipe != 'pengeluaran') continue;
+      if (t.kategori != category) continue;
+      try {
+        final dt = DateTime.parse(t.tanggal);
+        if ((dt.isAfter(start) || _isSameDay(dt, start)) &&
+            (dt.isBefore(end) || _isSameDay(dt, end))) {
+          total += int.tryParse(t.jumlah.replaceAll('.', '')) ?? 0;
+        }
+      } catch (_) {}
+    }
+    return total;
+  }
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
 }
 
 class _CategoryRow extends StatelessWidget {
