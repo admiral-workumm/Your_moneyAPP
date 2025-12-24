@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:your_money/app/modules/Dompet/views/dompet_view.dart';
+import 'package:your_money/app/modules/Dompet/views/add_dompet_view.dart';
 import 'package:your_money/app/modules/Dompet/bindings/dompet_binding.dart';
 import 'package:your_money/app/modules/catatkeuangan/bindings/catatkeuangan_binding.dart';
 import 'package:your_money/app/modules/catatkeuangan/views/catat_keuangan_view.dart';
@@ -61,6 +62,11 @@ class AppPages {
     GetPage(
       name: Routes.DOMPET,
       page: () => const DompetView(),
+      binding: DompetBinding(),
+    ),
+    GetPage(
+      name: Routes.ADD_DOMPET,
+      page: () => const AddDompetView(),
       binding: DompetBinding(),
     ),
     GetPage(

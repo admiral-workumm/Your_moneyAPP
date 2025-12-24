@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:your_money/app/data/models/transaksi.dart';
 import 'package:your_money/app/data/services/transaksi_service.dart';
+import 'package:your_money/app/modules/Dompet/controllers/dompet_controller.dart';
 
 class HomeController extends GetxController {
   final _box = GetStorage();
@@ -101,6 +102,7 @@ class HomeController extends GetxController {
     if (current is Map) {
       userName.value = current['userName']?.toString() ?? 'User';
       bookName.value = current['bookName']?.toString() ?? 'My Book';
+      _notifyDompetWithAccount(current.cast<String, String>());
       return;
     }
 
@@ -113,6 +115,8 @@ class HomeController extends GetxController {
     userName.value = account['userName'] ?? 'User';
     bookName.value = account['bookName'] ?? 'My Book';
     _box.write(_currentKey, account);
+
+    _notifyDompetWithAccount(account);
   }
 
   void addOrUpdateAccount(Map<String, String> account) {
@@ -146,6 +150,7 @@ class HomeController extends GetxController {
       userName.value = 'User';
       bookName.value = 'My Book';
       _box.remove(_currentKey);
+      _notifyDompetWithAccount(null);
     }
   }
 
@@ -161,5 +166,23 @@ class HomeController extends GetxController {
       selectedDate.value.year,
       selectedDate.value.month + 1,
     );
+  }
+
+  String _accountId(Map<String, String> account) {
+    final book = account['bookName']?.toString().trim() ?? '';
+    final user = account['userName']?.toString().trim() ?? '';
+    final id = book.isNotEmpty ? book : user;
+    return id.isNotEmpty ? id : 'default';
+  }
+
+  void _notifyDompetWithAccount(Map<String, String>? account) {
+    if (!Get.isRegistered<DompetController>()) return;
+    final dompet = Get.find<DompetController>();
+    if (account == null) {
+      dompet.setUser(null);
+      dompet.clearState();
+      return;
+    }
+    dompet.setUser(_accountId(account));
   }
 }

@@ -3,6 +3,7 @@ class Transaksi {
   final String jumlah;
   final String keterangan;
   final String jenisDompet;
+  final String dompetId; // link to WalletItem.id
   final String tanggal;
   final String kategori;
   final String tipe; // 'pengeluaran' atau 'pemasukan'
@@ -12,6 +13,7 @@ class Transaksi {
     required this.jumlah,
     required this.keterangan,
     required this.jenisDompet,
+    required this.dompetId,
     required this.tanggal,
     required this.kategori,
     required this.tipe,
@@ -24,6 +26,7 @@ class Transaksi {
       'jumlah': jumlah,
       'keterangan': keterangan,
       'jenisDompet': jenisDompet,
+      'dompetId': dompetId,
       'tanggal': tanggal,
       'kategori': kategori,
       'tipe': tipe,
@@ -37,6 +40,7 @@ class Transaksi {
       jumlah: map['jumlah'] ?? '0',
       keterangan: map['keterangan'] ?? '',
       jenisDompet: map['jenisDompet'] ?? '',
+      dompetId: map['dompetId'] ?? '',
       tanggal: map['tanggal'] ?? '',
       kategori: map['kategori'] ?? '',
       tipe: map['tipe'] ?? 'pengeluaran',
@@ -49,6 +53,7 @@ class Transaksi {
     String? jumlah,
     String? keterangan,
     String? jenisDompet,
+    String? dompetId,
     String? tanggal,
     String? kategori,
     String? tipe,
@@ -58,6 +63,7 @@ class Transaksi {
       jumlah: jumlah ?? this.jumlah,
       keterangan: keterangan ?? this.keterangan,
       jenisDompet: jenisDompet ?? this.jenisDompet,
+      dompetId: dompetId ?? this.dompetId,
       tanggal: tanggal ?? this.tanggal,
       kategori: kategori ?? this.kategori,
       tipe: tipe ?? this.tipe,

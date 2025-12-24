@@ -15,4 +15,5 @@ abstract class Routes {
   static const PENGINGAT = '/pengingat';
   static const PENGINGAT_LIST = '/pengingat-list';
   static const PENGINGAT_FORM = '/pengingat-form';
+  static const ADD_DOMPET = '/add-dompet';
 }

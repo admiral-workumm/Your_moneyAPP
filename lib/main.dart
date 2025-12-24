@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app/routes/app_pages.dart';
 import 'app/services/notification_service.dart';
 
@@ -55,6 +56,10 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: "Application",
+      theme: ThemeData(
+        fontFamily: GoogleFonts.poppins().fontFamily,
+        textTheme: GoogleFonts.poppinsTextTheme(),
+      ),
       initialRoute: initialRoute,
       getPages: AppPages.routes,
     );
