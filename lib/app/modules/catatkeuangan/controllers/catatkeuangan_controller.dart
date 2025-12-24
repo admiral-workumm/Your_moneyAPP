@@ -25,18 +25,41 @@ class CatatKeuanganController extends GetxController {
   var editingTransaksi = Rxn<Transaksi>();
 
   // Daftar pilihan dropdown
-  final dompetOptions = const [
-    'Tunai',
-    'E-Wallet',
-    'Bank',
-  ];
+  final dompetOptions = <String>[].obs;
+  // map wallet name -> wallet id (best-effort by current state)
+  final _dompetNameToId = <String, String>{}.obs;
+
+  DompetController? _dompetController;
 
   @override
   void onInit() {
     super.onInit();
+    if (Get.isRegistered<DompetController>()) {
+      _dompetController = Get.find<DompetController>();
+      ever<List<WalletItem>>(_dompetController!.wallets, (_) {
+        _syncDompetOptions();
+      });
+      _syncDompetOptions();
+    }
     // Reset form setiap kali buka (jika tidak dalam edit mode)
     if (editingTransaksi.value == null) {
       _resetForm();
+    }
+  }
+
+  void _syncDompetOptions() {
+    final source = _dompetController?.wallets ?? <WalletItem>[];
+    final active = source.where((w) => (w.active ?? true)).toList();
+    dompetOptions.assignAll(active.map((w) => w.name));
+    _dompetNameToId
+      ..clear()
+      ..addAll({for (final w in active) w.name: w.id});
+
+    if (dompetOptions.isEmpty) {
+      jenisDompet.value = null;
+    } else if (jenisDompet.value != null &&
+        !dompetOptions.contains(jenisDompet.value)) {
+      jenisDompet.value = dompetOptions.first;
     }
   }
 
@@ -61,7 +84,17 @@ class CatatKeuanganController extends GetxController {
     jumlahC.text = txn.jumlah;
     ketC.text = txn.keterangan;
     tanggalC.text = txn.tanggal;
-    jenisDompet.value = txn.jenisDompet;
+    // Prefer mapping by dompetId back to current wallet name (in case renamed)
+    if (_dompetController != null) {
+      final idx = _dompetController!.indexOfWallet(txn.dompetId);
+      if (idx >= 0) {
+        jenisDompet.value = _dompetController!.wallets[idx].name;
+      } else {
+        jenisDompet.value = txn.jenisDompet;
+      }
+    } else {
+      jenisDompet.value = txn.jenisDompet;
+    }
     kategori.value = txn.kategori;
     tipeTransaksi.value = txn.tipe;
     print(
@@ -71,6 +104,17 @@ class CatatKeuanganController extends GetxController {
   /// Fungsi ketika tombol centang ditekan (simpan catatan)
   Future<void> onSimpan() async {
     print('[CatatKeuanganController] onSimpan() called!');
+
+    if (dompetOptions.isEmpty) {
+      Get.snackbar(
+        'Tidak ada dompet',
+        'Tambahkan dompet terlebih dahulu sebelum mencatat transaksi.',
+        backgroundColor: Colors.redAccent.withOpacity(0.9),
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
 
     // Validasi sederhana
     if (jumlahC.text.isEmpty ||
@@ -94,15 +138,38 @@ class CatatKeuanganController extends GetxController {
 
     if (isEditing) {
       // UPDATE mode
-      final updatedTxn = editingTransaksi.value!.copyWith(
+      final prev = editingTransaksi.value!;
+      final selectedName = jenisDompet.value ?? '';
+      final selectedId = _dompetNameToId[selectedName] ?? prev.dompetId;
+      final updatedTxn = prev.copyWith(
         jumlah: jumlahC.text,
         keterangan: ketC.text,
-        jenisDompet: jenisDompet.value ?? '',
+        jenisDompet: selectedName,
+        dompetId: selectedId,
         tanggal: tanggalC.text,
         kategori: kategori.value ?? '',
         tipe: tipeTransaksi.value,
       );
       await _transaksiService.updateTransaksi(updatedTxn);
+
+      // Adjust wallet saldo based on changes
+      try {
+        if (Get.isRegistered<DompetController>()) {
+          final dompet = Get.find<DompetController>();
+          final oldAmount = int.tryParse(prev.jumlah.replaceAll('.', '')) ?? 0;
+          final newAmount =
+              int.tryParse(updatedTxn.jumlah.replaceAll('.', '')) ?? 0;
+
+          // Revert old effect
+          final oldDelta = prev.tipe == 'pemasukan' ? -oldAmount : oldAmount;
+          dompet.adjustWalletSaldoById(prev.dompetId, oldDelta);
+
+          // Apply new effect to possibly new wallet
+          final newDelta =
+              updatedTxn.tipe == 'pemasukan' ? newAmount : -newAmount;
+          dompet.adjustWalletSaldoById(updatedTxn.dompetId, newDelta);
+        }
+      } catch (_) {}
 
       Get.snackbar(
         'Berhasil',
@@ -114,11 +181,14 @@ class CatatKeuanganController extends GetxController {
     } else {
       // CREATE mode
       print('[CatatKeuanganController] CREATE mode - saving new transaction');
+      final selectedName = jenisDompet.value ?? '';
+      final selectedId = _dompetNameToId[selectedName] ?? '';
       final transaksi = Transaksi(
         id: '', // akan di-generate oleh service
         jumlah: jumlahC.text,
         keterangan: ketC.text,
-        jenisDompet: jenisDompet.value ?? '',
+        jenisDompet: selectedName,
+        dompetId: selectedId,
         tanggal: tanggalC.text,
         kategori: kategori.value ?? '',
         tipe: tipeTransaksi.value,
@@ -127,6 +197,17 @@ class CatatKeuanganController extends GetxController {
       // Simpan ke local storage (await untuk memastikan selesai)
       await _transaksiService.addTransaksi(transaksi);
       print('[CatatKeuanganController] Transaction saved successfully');
+
+      // Update saldo dompet langsung
+      try {
+        if (Get.isRegistered<DompetController>()) {
+          final dompet = Get.find<DompetController>();
+          final amount =
+              int.tryParse(transaksi.jumlah.replaceAll('.', '')) ?? 0;
+          final delta = transaksi.tipe == 'pemasukan' ? amount : -amount;
+          dompet.adjustWalletSaldoById(transaksi.dompetId, delta);
+        }
+      } catch (_) {}
 
       Get.snackbar(
         'Berhasil',
@@ -161,6 +242,22 @@ class CatatKeuanganController extends GetxController {
     } catch (e) {
       print('[CatatKeuanganController] DompetController error: $e');
     }
+
+    // Refresh Grafik controller jika sudah di-register
+    try {
+      if (Get.isRegistered<GrafikController>()) {
+        final grafikController = Get.find<GrafikController>();
+        print('[CatatKeuanganController] Refreshing grafik controller...');
+        grafikController.refreshData();
+        print('[CatatKeuanganController] Grafik controller refreshed!');
+      }
+    } catch (e) {
+      print('[CatatKeuanganController] GrafikController error: $e');
+    }
+
+    // Delay navigasi sampai snackbar selesai (1.5 detik) supaya tidak conflict
+    print('[CatatKeuanganController] Waiting for snackbar to finish...');
+    await Future.delayed(const Duration(milliseconds: 1600));
 
     // Navigasi langsung ke HOME (bukan Get.back)
     print('[CatatKeuanganController] Navigating back to HOME...');

@@ -215,15 +215,22 @@ class _FormPengeluaran extends StatelessWidget {
           Text('Jenis Dompet', style: labelStyle),
           const SizedBox(height: 8),
           Obx(() {
+            final options = controller.dompetOptions;
+            final disabled = options.isEmpty;
             return DropdownButtonFormField<String>(
-              value: controller.jenisDompet.value,
-              items: controller.dompetOptions
+              value: disabled ? null : controller.jenisDompet.value,
+              items: options
                   .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                   .toList(),
-              onChanged: (v) => controller.jenisDompet.value = v,
+              onChanged:
+                  disabled ? null : (v) => controller.jenisDompet.value = v,
               decoration: decoration.copyWith(
-                  hintText: 'Pilih jenis dompet',
-                  suffixIcon: const Icon(Icons.arrow_drop_down)),
+                hintText: disabled
+                    ? 'Belum ada dompet, tambah dulu'
+                    : 'Pilih jenis dompet',
+                helperText: disabled ? 'Tambah dompet di halaman Dompet' : null,
+                suffixIcon: const Icon(Icons.arrow_drop_down),
+              ),
             );
           }),
           const SizedBox(height: 16),
@@ -285,15 +292,22 @@ class _FormPemasukan extends StatelessWidget {
           Text('Jenis Dompet', style: labelStyle),
           const SizedBox(height: 8),
           Obx(() {
+            final options = controller.dompetOptions;
+            final disabled = options.isEmpty;
             return DropdownButtonFormField<String>(
-              value: controller.jenisDompet.value,
-              items: controller.dompetOptions
+              value: disabled ? null : controller.jenisDompet.value,
+              items: options
                   .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                   .toList(),
-              onChanged: (v) => controller.jenisDompet.value = v,
+              onChanged:
+                  disabled ? null : (v) => controller.jenisDompet.value = v,
               decoration: decoration.copyWith(
-                  hintText: 'Pilih jenis dompet',
-                  suffixIcon: const Icon(Icons.arrow_drop_down)),
+                hintText: disabled
+                    ? 'Belum ada dompet, tambah dulu'
+                    : 'Pilih jenis dompet',
+                helperText: disabled ? 'Tambah dompet di halaman Dompet' : null,
+                suffixIcon: const Icon(Icons.arrow_drop_down),
+              ),
             );
           }),
           const SizedBox(height: 16),

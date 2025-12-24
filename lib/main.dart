@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+<<<<<<< HEAD
+=======
+import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
+>>>>>>> 3d04a2c (Update UI & data dompet)
 import 'app/routes/app_pages.dart';
 
 void main() async {
@@ -47,6 +52,10 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: "Application",
+      theme: ThemeData(
+        fontFamily: GoogleFonts.poppins().fontFamily,
+        textTheme: GoogleFonts.poppinsTextTheme(),
+      ),
       initialRoute: initialRoute,
       getPages: AppPages.routes,
     );
