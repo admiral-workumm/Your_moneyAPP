@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'segment.dart';
 
@@ -62,6 +63,33 @@ class _DonutPainter extends CustomPainter {
   final double stroke;
   const _DonutPainter({required this.segments, required this.stroke});
 
+  IconData _iconForName(String name) {
+    switch (name.toLowerCase()) {
+      case 'makan':
+        return Icons.restaurant;
+      case 'hiburan':
+        return Icons.sports_esports;
+      case 'transportasi':
+        return Icons.directions_bus;
+      case 'belanja':
+        return Icons.shopping_bag;
+      case 'komunikasi':
+        return Icons.smartphone;
+      case 'kesehatan':
+        return Icons.medical_services;
+      case 'pendidikan':
+        return Icons.school;
+      case 'home':
+        return Icons.home;
+      case 'keluarga':
+        return Icons.groups;
+      case 'lainnya':
+        return Icons.category;
+      default:
+        return Icons.category;
+    }
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
@@ -95,9 +123,10 @@ class _DonutPainter extends CustomPainter {
         continue;
       }
 
-      // percent text
-      final pDx = center.dx + centerRadius * math.cos(mid);
-      final pDy = center.dy + centerRadius * math.sin(mid);
+      // percent text at radial middle of ring
+      final percentRadius = radius - stroke * 0.5;
+      final pDx = center.dx + percentRadius * math.cos(mid);
+      final pDy = center.dy + percentRadius * math.sin(mid);
       final tp = TextPainter(
         text: TextSpan(
           text: '${s.percent}%',
@@ -114,48 +143,52 @@ class _DonutPainter extends CustomPainter {
       )..layout();
       tp.paint(canvas, Offset(pDx - tp.width / 2, pDy - tp.height / 2));
 
-      // name label outside
-      final tn = TextPainter(
-        text: TextSpan(
-            text: s.name,
-            style: const TextStyle(fontSize: 13, color: Colors.black)),
-        textDirection: TextDirection.ltr,
-        maxLines: 1,
-        ellipsis: '…',
-      )..layout(maxWidth: (size.width / 2) - 20);
-      final nameRadius = arcOuter + 40.0;
-      final nDx = center.dx + nameRadius * math.cos(mid);
-      final nDy = center.dy + nameRadius * math.sin(mid);
-      final onRight = math.cos(mid) >= 0;
-      final arcPoint = Offset(center.dx + arcOuter * math.cos(mid),
-          center.dy + arcOuter * math.sin(mid));
-      double nX;
-      if (onRight) {
-        final ideal = nDx + 6;
-        final overflow = ideal + tn.width + 4 > size.width;
-        nX = overflow ? (arcPoint.dx + 20) : ideal;
-      } else {
-        nX = nDx - tn.width - 6;
-      }
-      double nY = nDy - tn.height / 2;
-      nY = nY.clamp(4.0, size.height - tn.height - 4.0);
+      // category icon badge outside (styled circle with border & shadow)
+      // Move badge closer to the outer ring
+      final nameRadius = arcOuter + 18.0;
+      final bCx = center.dx + nameRadius * math.cos(mid);
+      final bCy = center.dy + nameRadius * math.sin(mid);
+      const badgeRadius = 16.0; // 32px diameter
 
-      final labelAttach = onRight
-          ? Offset(nX - 6, nY + tn.height / 2)
-          : Offset(nX + tn.width + 6, nY + tn.height / 2);
-      final linePaint = Paint()
-        ..color = Colors.grey.shade400
+      // Shadow under badge
+      final shadowPaint = Paint()
+        ..color = Colors.black26
+        ..style = PaintingStyle.fill
+        ..maskFilter = ui.MaskFilter.blur(ui.BlurStyle.normal, 4);
+      canvas.drawCircle(Offset(bCx, bCy + 2), badgeRadius, shadowPaint);
+
+      // White badge fill
+      final fillPaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(Offset(bCx, bCy), badgeRadius, fillPaint);
+
+      // Colored border using segment color
+      final borderPaint = Paint()
+        ..color = s.color
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4
-        ..strokeCap = StrokeCap.round;
-      final midPoint = Offset(
-        arcPoint.dx + (labelAttach.dx - arcPoint.dx) * 0.35,
-        arcPoint.dy + (labelAttach.dy - arcPoint.dy) * 0.35,
-      );
-      canvas.drawLine(arcPoint, midPoint, linePaint);
-      canvas.drawLine(midPoint, labelAttach, linePaint);
+        ..strokeWidth = 2.0;
+      canvas.drawCircle(Offset(bCx, bCy), badgeRadius, borderPaint);
 
-      tn.paint(canvas, Offset(nX, nY));
+      // Icon inside badge
+      final icon = _iconForName(s.name);
+      const iconSize = 18.0;
+      final iconPainter = TextPainter(
+        text: TextSpan(
+          text: String.fromCharCode(icon.codePoint),
+          style: TextStyle(
+            fontSize: iconSize,
+            fontFamily: icon.fontFamily,
+            package: icon.fontPackage,
+            color: s.color,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      iconPainter.paint(
+        canvas,
+        Offset(bCx - iconPainter.width / 2, bCy - iconPainter.height / 2),
+      );
 
       start += sweep;
     }
