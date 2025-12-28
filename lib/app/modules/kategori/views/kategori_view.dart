@@ -24,6 +24,7 @@ class KategoriView extends StatelessWidget {
     const Color accent = Color(0xFF1E88E5);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: accent,
