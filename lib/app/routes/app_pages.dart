@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:your_money/app/modules/Dompet/views/dompet_view.dart';
+import 'package:your_money/app/modules/Dompet/views/add_dompet_view.dart';
 import 'package:your_money/app/modules/Dompet/bindings/dompet_binding.dart';
 import 'package:your_money/app/modules/catatkeuangan/bindings/catatkeuangan_binding.dart';
 import 'package:your_money/app/modules/catatkeuangan/views/catat_keuangan_view.dart';
@@ -13,6 +14,7 @@ import 'package:your_money/app/modules/shell/bindings/shell_binding.dart';
 import 'package:your_money/app/modules/kategori/views/kategori_view.dart';
 import 'package:your_money/app/modules/kategori/views/detail_kategori.dart';
 import 'package:your_money/app/modules/anggaran/views/anggaran_view.dart';
+import 'package:your_money/app/modules/anggaran/views/anggaran_detail_view.dart';
 import 'package:your_money/app/modules/pengigat/views/pengingat_list_view.dart';
 import 'package:your_money/app/modules/pengigat/views/pengingat_form_view.dart';
 import 'package:your_money/app/modules/pengigat/bindings/pengingat_binding.dart';
@@ -63,6 +65,11 @@ class AppPages {
       binding: DompetBinding(),
     ),
     GetPage(
+      name: Routes.ADD_DOMPET,
+      page: () => const AddDompetView(),
+      binding: DompetBinding(),
+    ),
+    GetPage(
       name: Routes.KATEGORI,
       page: () => const KategoriView(),
     ),
@@ -74,6 +81,10 @@ class AppPages {
     GetPage(
       name: Routes.ANGGARAN,
       page: () => const AnggaranView(),
+    ),
+    GetPage(
+      name: Routes.ANGGARAN_DETAIL,
+      page: () => const AnggaranDetailView(),
     ),
     GetPage(
       name: Routes.BUKUMU,
