@@ -8,6 +8,7 @@ class DetailKategoriController extends GetxController {
   final selectedMonth = DateTime.now().obs;
   final expandedDates = <String>[].obs;
   final transactionsByDate = <String, List<Transaksi>>{}.obs;
+  final selectedType = 'semua'.obs; // 'semua', 'pemasukan', 'pengeluaran'
 
   // Service
   final _transaksiService = TransaksiService();
@@ -36,13 +37,75 @@ class DetailKategoriController extends GetxController {
     return total;
   }
 
-  // Count transaksi untuk kategori di bulan ini
+  // Calculate total pemasukan untuk kategori di bulan ini
+  double get totalPemasukan {
+    double total = 0;
+    transactionsByDate.forEach((date, transactions) {
+      for (var txn in transactions) {
+        if (txn.tipe == 'pemasukan') {
+          final amount =
+              double.tryParse(txn.jumlah.replaceAll(RegExp(r'[^\d]'), '')) ?? 0;
+          total += amount;
+        }
+      }
+    });
+    return total;
+  }
+
+  // Get total based on transaction type (first transaction in the category)
+  double get totalAmount {
+    return totalPemasukan > 0 ? totalPemasukan : totalPengeluaran;
+  }
+
+  // Check if this category has income transactions
+  bool get isIncomeCategory {
+    return totalPemasukan > 0;
+  }
+
+  // Get filtered total based on selected type
+  double get filteredTotal {
+    if (selectedType.value == 'pemasukan') {
+      return totalPemasukan;
+    } else if (selectedType.value == 'pengeluaran') {
+      return totalPengeluaran;
+    }
+    return totalPemasukan + totalPengeluaran;
+  }
+
+  // Get filtered transactions by type
+  Map<String, List<Transaksi>> get filteredTransactions {
+    if (selectedType.value == 'semua') {
+      return transactionsByDate;
+    }
+
+    final filtered = <String, List<Transaksi>>{};
+    transactionsByDate.forEach((date, transactions) {
+      final matchingTxns =
+          transactions.where((txn) => txn.tipe == selectedType.value).toList();
+      if (matchingTxns.isNotEmpty) {
+        filtered[date] = matchingTxns;
+      }
+    });
+    return filtered;
+  }
+
+  // Count transaksi untuk kategori di bulan ini (filtered)
   int get totalTransactions {
     int count = 0;
-    transactionsByDate.forEach((date, transactions) {
+    filteredTransactions.forEach((date, transactions) {
       count += transactions.length;
     });
     return count;
+  }
+
+  // Change selected type
+  void setSelectedType(String type) {
+    selectedType.value = type;
+    // Reset expansions
+    expandedDates.clear();
+    if (filteredTransactions.isNotEmpty) {
+      expandedDates.add(filteredTransactions.keys.first);
+    }
   }
 
   // Navigate ke bulan sebelumnya

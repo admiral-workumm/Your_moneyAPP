@@ -14,6 +14,7 @@ class DetailKategoriView extends GetView<DetailKategoriController> {
     const Color blue = Color(0xFF1E88E5);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: blue,
@@ -24,14 +25,19 @@ class DetailKategoriView extends GetView<DetailKategoriController> {
         title: const Text('Detail Kategori',
             style: TextStyle(color: Colors.white)),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _SummaryCard(title: label, icon: icon, accent: blue),
-            const SizedBox(height: 16),
-            _TransactionsCard(accent: blue, icon: icon, title: label),
-          ],
+      body: Container(
+        color: Colors.white,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _SummaryCard(title: label, icon: icon, accent: blue),
+              const SizedBox(height: 16),
+              _FilterButtons(accent: blue),
+              const SizedBox(height: 16),
+              _TransactionsCard(accent: blue, icon: icon, title: label),
+            ],
+          ),
         ),
       ),
     );
@@ -128,31 +134,186 @@ class _SummaryCard extends GetView<DetailKategoriController> {
                     ],
                   ),
                   const Spacer(),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                          '-Rp${controller.totalPengeluaran.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (Match m) => '.')}',
-                          style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.red,
-                              fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.credit_card,
-                              size: 16, color: Colors.grey[600]),
-                          const SizedBox(width: 6),
-                          Text('Total',
-                              style: TextStyle(color: Colors.grey[600])),
-                        ],
-                      ),
-                    ],
-                  ),
+                  // Display based on selected type
+                  if (controller.selectedType.value == 'semua')
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                            'Rp${(controller.totalPemasukan + controller.totalPengeluaran).toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (Match m) => '.')}',
+                            style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.credit_card,
+                                size: 16, color: Colors.grey[600]),
+                            const SizedBox(width: 6),
+                            Text('Total Semua',
+                                style: TextStyle(color: Colors.grey[600])),
+                          ],
+                        ),
+                      ],
+                    )
+                  else if (controller.selectedType.value == 'pemasukan')
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                            'Rp${controller.totalPemasukan.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (Match m) => '.')}',
+                            style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.green,
+                                fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.arrow_upward,
+                                size: 16, color: Colors.green),
+                            const SizedBox(width: 6),
+                            Text('Total Pemasukan',
+                                style: TextStyle(color: Colors.grey[600])),
+                          ],
+                        ),
+                      ],
+                    )
+                  else
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                            'Rp${controller.totalPengeluaran.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (Match m) => '.')}',
+                            style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.red,
+                                fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.arrow_downward,
+                                size: 16, color: Colors.red),
+                            const SizedBox(width: 6),
+                            Text('Total Pengeluaran',
+                                style: TextStyle(color: Colors.grey[600])),
+                          ],
+                        ),
+                      ],
+                    ),
                 ],
               )),
         ],
+      ),
+    );
+  }
+}
+
+class _FilterButtons extends GetView<DetailKategoriController> {
+  final Color accent;
+  const _FilterButtons({required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() => Row(
+          children: [
+            Expanded(
+              child: _FilterButton(
+                label: 'Semua',
+                isSelected: controller.selectedType.value == 'semua',
+                onTap: () => controller.setSelectedType('semua'),
+                color: Colors.grey[700]!,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _FilterButton(
+                label: 'Pemasukan',
+                isSelected: controller.selectedType.value == 'pemasukan',
+                onTap: () => controller.setSelectedType('pemasukan'),
+                color: Colors.green,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _FilterButton(
+                label: 'Pengeluaran',
+                isSelected: controller.selectedType.value == 'pengeluaran',
+                onTap: () => controller.setSelectedType('pengeluaran'),
+                color: Colors.red,
+              ),
+            ),
+          ],
+        ));
+  }
+}
+
+class _FilterButton extends StatelessWidget {
+  final String label;
+  final double? amount;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final Color color;
+
+  const _FilterButton({
+    required this.label,
+    this.amount,
+    required this.isSelected,
+    required this.onTap,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? color : Colors.grey[300]!,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: color.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: Colors.grey[800],
+              ),
+            ),
+            if (amount != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Rp${amount!.toStringAsFixed(0).replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (Match m) => '.')}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -188,7 +349,7 @@ class _TransactionsCard extends GetView<DetailKategoriController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      if (controller.transactionsByDate.isEmpty) {
+      if (controller.filteredTransactions.isEmpty) {
         return Container(
           width: double.infinity,
           padding: const EdgeInsets.all(24),
@@ -205,7 +366,9 @@ class _TransactionsCard extends GetView<DetailKategoriController> {
           ),
           child: Center(
             child: Text(
-              'Belum ada transaksi untuk kategori ini',
+              controller.selectedType.value == 'semua'
+                  ? 'Belum ada transaksi untuk kategori ini'
+                  : 'Belum ada transaksi ${controller.selectedType.value}',
               style: TextStyle(color: Colors.grey[500]),
             ),
           ),
@@ -213,7 +376,7 @@ class _TransactionsCard extends GetView<DetailKategoriController> {
       }
 
       return Column(
-        children: controller.transactionsByDate.entries.map((entry) {
+        children: controller.filteredTransactions.entries.map((entry) {
           final dateKey = entry.key;
           final transactions = entry.value;
           final dayTotal = _calculateDayTotal(transactions);
@@ -296,8 +459,11 @@ class _TransactionsCard extends GetView<DetailKategoriController> {
                                         icon: icon,
                                         title: title,
                                         subtitle: txn.keterangan,
-                                        amount: '-Rp${txn.jumlah}',
+                                        amount: txn.tipe == 'pemasukan'
+                                            ? '+Rp${txn.jumlah}'
+                                            : '-Rp${txn.jumlah}',
                                         account: txn.jenisDompet,
+                                        isIncome: txn.tipe == 'pemasukan',
                                       ),
                                       if (index < transactions.length - 1)
                                         const Divider(height: 1),
@@ -327,6 +493,7 @@ class _TxRow extends StatelessWidget {
   final String subtitle;
   final String amount;
   final String account;
+  final bool isIncome;
   const _TxRow({
     required this.accent,
     required this.icon,
@@ -334,6 +501,7 @@ class _TxRow extends StatelessWidget {
     required this.subtitle,
     required this.amount,
     required this.account,
+    this.isIncome = false,
   });
 
   @override
@@ -372,8 +540,9 @@ class _TxRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(amount,
-                  style: const TextStyle(
-                      color: Colors.red, fontWeight: FontWeight.w700)),
+                  style: TextStyle(
+                      color: isIncome ? Colors.green : Colors.red,
+                      fontWeight: FontWeight.w700)),
               const SizedBox(height: 2),
               Text(account, style: TextStyle(color: Colors.grey[600])),
             ],
