@@ -161,7 +161,7 @@ class _GrafikViewState extends State<GrafikView> {
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(16, 20, 16, bottomSpacer),
+                padding: EdgeInsets.fromLTRB(16, 28, 16, bottomSpacer),
                 child: Column(
                   children: [
                     if (chartType != ChartType.anggaran) ...[
@@ -192,7 +192,7 @@ class _GrafikViewState extends State<GrafikView> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 24),
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.white,
@@ -314,8 +314,11 @@ class _CategoryRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: Text(name, style: const TextStyle(fontSize: 16))),
-          Text(percent, style: const TextStyle(fontSize: 16)),
-          const SizedBox(width: 20),
+          const SizedBox(width: 12),
+          Text(percent,
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          const SizedBox(width: 32),
           Text(amount,
               style:
                   const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
