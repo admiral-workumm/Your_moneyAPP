@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:your_money/app/data/models/transaksi.dart';
 import 'package:your_money/app/data/services/transaksi_service.dart';
 import 'package:your_money/app/modules/home/controllers/home_controller.dart';
@@ -19,6 +21,9 @@ class CatatKeuanganController extends GetxController {
   final tipeTransaksi =
       RxString('pengeluaran'); // 'pengeluaran' atau 'pemasukan'
 
+  // Formatter untuk field jumlah (Rupiah)
+  final rupiahFormatter = RupiahInputFormatter();
+
   // Service untuk menyimpan transaksi
   final _transaksiService = TransaksiService();
 
@@ -26,33 +31,141 @@ class CatatKeuanganController extends GetxController {
   var editingTransaksi = Rxn<Transaksi>();
 
   // Daftar pilihan dropdown
-  final dompetOptions = const [
-    'Tunai',
-    'E-Wallet',
-    'Bank',
-  ];
+  final dompetOptions = <String>[].obs;
+  // map wallet name -> wallet id (best-effort by current state)
+  final _dompetNameToId = <String, String>{}.obs;
+
+  DompetController? _dompetController;
 
   @override
   void onInit() {
     super.onInit();
+    if (Get.isRegistered<DompetController>()) {
+      _dompetController = Get.find<DompetController>();
+      ever<List<WalletItem>>(_dompetController!.wallets, (_) {
+        _syncDompetOptions();
+      });
+      _syncDompetOptions();
+    }
     // Reset form setiap kali buka (jika tidak dalam edit mode)
     if (editingTransaksi.value == null) {
       _resetForm();
     }
   }
 
+  void _syncDompetOptions() {
+    final source = _dompetController?.wallets ?? <WalletItem>[];
+    final active = source.where((w) => (w.active ?? true)).toList();
+    dompetOptions.assignAll(active.map((w) => w.name));
+    _dompetNameToId
+      ..clear()
+      ..addAll({for (final w in active) w.name: w.id});
+
+    if (dompetOptions.isEmpty) {
+      jenisDompet.value = null;
+    } else if (jenisDompet.value != null &&
+        !dompetOptions.contains(jenisDompet.value)) {
+      jenisDompet.value = dompetOptions.first;
+    }
+  }
+
   /// Fungsi untuk memilih tanggal
   Future<void> pickDate(BuildContext context) async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
+    final initial = _tryParseDate(tanggalC.text) ?? now;
+    final first = DateTime(now.year - 3);
+    final last = DateTime(now.year + 3);
+
+    final picked = await showDialog<DateTime>(
       context: context,
-      initialDate: now,
-      firstDate: DateTime(now.year - 3),
-      lastDate: DateTime(now.year + 3),
+      barrierDismissible: true,
+      builder: (ctx) {
+        const primary = Color(0xFF1E88E5);
+        const onSurface = Colors.black87;
+        const surface = Colors.white;
+        DateTime temp = initial;
+
+        return Theme(
+          data: Theme.of(ctx).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: primary,
+              onPrimary: Colors.white,
+              surface: surface,
+              onSurface: onSurface,
+            ),
+            dialogBackgroundColor: surface,
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(foregroundColor: primary),
+            ),
+          ),
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+            content: StatefulBuilder(
+              builder: (context, setState) {
+                return SizedBox(
+                  width: 320,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Pilih Tanggal',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      CalendarDatePicker(
+                        initialDate: temp,
+                        firstDate: first,
+                        lastDate: last,
+                        onDateChanged: (d) => setState(() => temp = d),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Batal'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, temp),
+                            child: const Text('Pilih'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
+
     if (picked != null) {
       tanggalC.text =
           "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+    }
+  }
+
+  /// Ambil nilai jumlah sebagai int dari teks terformat (mis. "10.000")
+  int parseJumlah(String text) => RupiahInputFormatter.parseToInt(text);
+
+  DateTime? _tryParseDate(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final p = raw.split('-');
+      if (p.length != 3) return null;
+      return DateTime(int.parse(p[0]), int.parse(p[1]), int.parse(p[2]));
+    } catch (_) {
+      return null;
     }
   }
 
@@ -62,7 +175,17 @@ class CatatKeuanganController extends GetxController {
     jumlahC.text = txn.jumlah;
     ketC.text = txn.keterangan;
     tanggalC.text = txn.tanggal;
-    jenisDompet.value = txn.jenisDompet;
+    // Prefer mapping by dompetId back to current wallet name (in case renamed)
+    if (_dompetController != null) {
+      final idx = _dompetController!.indexOfWallet(txn.dompetId);
+      if (idx >= 0) {
+        jenisDompet.value = _dompetController!.wallets[idx].name;
+      } else {
+        jenisDompet.value = txn.jenisDompet;
+      }
+    } else {
+      jenisDompet.value = txn.jenisDompet;
+    }
     kategori.value = txn.kategori;
     tipeTransaksi.value = txn.tipe;
     print(
@@ -72,6 +195,17 @@ class CatatKeuanganController extends GetxController {
   /// Fungsi ketika tombol centang ditekan (simpan catatan)
   Future<void> onSimpan() async {
     print('[CatatKeuanganController] onSimpan() called!');
+
+    if (dompetOptions.isEmpty) {
+      Get.snackbar(
+        'Tidak ada dompet',
+        'Tambahkan dompet terlebih dahulu sebelum mencatat transaksi.',
+        backgroundColor: Colors.redAccent.withOpacity(0.9),
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
 
     // Validasi sederhana
     if (jumlahC.text.isEmpty ||
@@ -95,15 +229,38 @@ class CatatKeuanganController extends GetxController {
 
     if (isEditing) {
       // UPDATE mode
-      final updatedTxn = editingTransaksi.value!.copyWith(
+      final prev = editingTransaksi.value!;
+      final selectedName = jenisDompet.value ?? '';
+      final selectedId = _dompetNameToId[selectedName] ?? prev.dompetId;
+      final updatedTxn = prev.copyWith(
         jumlah: jumlahC.text,
         keterangan: ketC.text,
-        jenisDompet: jenisDompet.value ?? '',
+        jenisDompet: selectedName,
+        dompetId: selectedId,
         tanggal: tanggalC.text,
         kategori: kategori.value ?? '',
         tipe: tipeTransaksi.value,
       );
       await _transaksiService.updateTransaksi(updatedTxn);
+
+      // Adjust wallet saldo based on changes
+      try {
+        if (Get.isRegistered<DompetController>()) {
+          final dompet = Get.find<DompetController>();
+          final oldAmount = int.tryParse(prev.jumlah.replaceAll('.', '')) ?? 0;
+          final newAmount =
+              int.tryParse(updatedTxn.jumlah.replaceAll('.', '')) ?? 0;
+
+          // Revert old effect
+          final oldDelta = prev.tipe == 'pemasukan' ? -oldAmount : oldAmount;
+          dompet.adjustWalletSaldoById(prev.dompetId, oldDelta);
+
+          // Apply new effect to possibly new wallet
+          final newDelta =
+              updatedTxn.tipe == 'pemasukan' ? newAmount : -newAmount;
+          dompet.adjustWalletSaldoById(updatedTxn.dompetId, newDelta);
+        }
+      } catch (_) {}
 
       Get.snackbar(
         'Berhasil',
@@ -115,11 +272,14 @@ class CatatKeuanganController extends GetxController {
     } else {
       // CREATE mode
       print('[CatatKeuanganController] CREATE mode - saving new transaction');
+      final selectedName = jenisDompet.value ?? '';
+      final selectedId = _dompetNameToId[selectedName] ?? '';
       final transaksi = Transaksi(
         id: '', // akan di-generate oleh service
         jumlah: jumlahC.text,
         keterangan: ketC.text,
-        jenisDompet: jenisDompet.value ?? '',
+        jenisDompet: selectedName,
+        dompetId: selectedId,
         tanggal: tanggalC.text,
         kategori: kategori.value ?? '',
         tipe: tipeTransaksi.value,
@@ -128,6 +288,17 @@ class CatatKeuanganController extends GetxController {
       // Simpan ke local storage (await untuk memastikan selesai)
       await _transaksiService.addTransaksi(transaksi);
       print('[CatatKeuanganController] Transaction saved successfully');
+
+      // Update saldo dompet langsung
+      try {
+        if (Get.isRegistered<DompetController>()) {
+          final dompet = Get.find<DompetController>();
+          final amount =
+              int.tryParse(transaksi.jumlah.replaceAll('.', '')) ?? 0;
+          final delta = transaksi.tipe == 'pemasukan' ? amount : -amount;
+          dompet.adjustWalletSaldoById(transaksi.dompetId, delta);
+        }
+      } catch (_) {}
 
       Get.snackbar(
         'Berhasil',
@@ -208,5 +379,41 @@ class CatatKeuanganController extends GetxController {
     ketC.dispose();
     tanggalC.dispose();
     super.onClose();
+  }
+}
+
+/// Formatter Rupiah dengan pemisah ribuan (tanpa desimal), stabil untuk cursor
+class RupiahInputFormatter extends TextInputFormatter {
+  RupiahInputFormatter({String locale = 'id_ID'})
+      : _formatter = NumberFormat.decimalPattern(locale);
+
+  final NumberFormat _formatter;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+
+    final number = int.parse(digits);
+    final formatted = _formatter.format(number);
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+
+  /// Helper untuk parsing kembali ke int jika diperlukan
+  static int parseToInt(String text) {
+    final digits = text.replaceAll(RegExp(r'[^0-9]'), '');
+    return int.tryParse(digits) ?? 0;
   }
 }

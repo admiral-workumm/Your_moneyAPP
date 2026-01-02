@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:your_money/app/data/services/transaksi_service.dart';
+import 'package:your_money/app/modules/Dompet/controllers/dompet_controller.dart';
 import 'package:your_money/app/modules/catatkeuangan/controllers/catatkeuangan_controller.dart';
 import 'package:your_money/app/routes/app_routes.dart';
 import '../controllers/home_controller.dart';
@@ -235,16 +236,16 @@ class _HeaderGradient extends GetView<HomeController> {
                 () => Text('Hi, ${controller.userName.value}',
                     style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600)),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w400)),
               ),
               const SizedBox(height: 6),
               Obx(
                 () => Text(controller.bookName.value,
                     style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w600,
                         height: 1.1)),
               ),
             ],
@@ -279,7 +280,7 @@ class _HeaderTopRow extends StatelessWidget {
         Expanded(
             child: Text('Your money',
                 style: TextStyle(
-                    color: Colors.white70, fontSize: 12, letterSpacing: .2))),
+                    color: Colors.white, fontSize: 18, letterSpacing: .2))),
       ],
     );
   }
@@ -344,6 +345,14 @@ class _SaldoCard extends StatelessWidget {
     );
   }
 
+  String _saldoText() {
+    if (Get.isRegistered<DompetController>()) {
+      final v = Get.find<DompetController>().totalSaldo.value;
+      return v >= 0 ? 'Rp${_rupiah(v)}' : '-Rp${_rupiah((-v))}';
+    }
+    return 'Rp0';
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = Get.find<HomeController>();
@@ -393,7 +402,8 @@ class _SaldoCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Rp${_rupiah(c.saldoTotal.value)}',
+                        // Show total saldo from active wallets
+                        _saldoText(),
                         style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
@@ -411,7 +421,7 @@ class _SaldoCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
-                    vertical: 6,
+                    vertical: 4,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.8),
@@ -900,10 +910,12 @@ class _TxnTile extends GetView<HomeController> {
                   alignment: Alignment.centerRight,
                   child: Text(
                     amount,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
-                      color: Colors.red,
+                      color: transaksi?.tipe == 'pemasukan'
+                          ? Colors.green
+                          : Colors.red,
                     ),
                   ),
                 ),
@@ -940,8 +952,11 @@ class _TxnTile extends GetView<HomeController> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(amount,
-                style: const TextStyle(
-                    color: Colors.red, fontWeight: FontWeight.w700)),
+                style: TextStyle(
+                    color: transaksi?.tipe == 'pemasukan'
+                        ? Colors.green
+                        : Colors.red,
+                    fontWeight: FontWeight.w700)),
             const SizedBox(height: 2),
             Text(bank,
                 style: const TextStyle(color: Colors.grey, fontSize: 12)),
@@ -964,12 +979,25 @@ class _TxnTile extends GetView<HomeController> {
   void _deleteTransaksiReal(BuildContext context, dynamic txn) async {
     // Delete langsung tanpa konfirmasi
     await TransaksiService().deleteTransaksi(txn.id);
+    // Revert saldo dompet terkait
+    try {
+      if (Get.isRegistered<DompetController>()) {
+        final dompet = Get.find<DompetController>();
+        final amount = int.tryParse(txn.jumlah.replaceAll('.', '')) ?? 0;
+        final delta = txn.tipe == 'pemasukan' ? -amount : amount;
+        dompet.adjustWalletSaldoById(txn.dompetId, delta);
+      }
+    } catch (_) {}
 
     // Close detail dialog
     Navigator.pop(context);
 
     // Refresh home
     controller.refreshTransaksi();
+    // Also refresh dompet totals
+    if (Get.isRegistered<DompetController>()) {
+      Get.find<DompetController>().refreshSaldo();
+    }
 
     // Show success message
     Get.snackbar(
@@ -1040,22 +1068,26 @@ IconData _getIconForKategori(String kategori) {
   switch (kategori.toLowerCase()) {
     case 'makan':
       return Icons.restaurant;
-    case 'game':
+    case 'hiburan':
       return Icons.sports_esports;
-    case 'hadiah':
-      return Icons.card_giftcard;
-    case 'minuman':
-      return Icons.local_cafe;
-    case 'transport':
+    case 'transportasi':
       return Icons.directions_bus;
-    case 'gadget':
+    case 'belanja':
+      return Icons.shopping_bag;
+    case 'komunikasi':
       return Icons.smartphone;
-    case 'pribadi':
-      return Icons.person_outline;
+    case 'kesehatan':
+      return Icons.medical_services;
     case 'pendidikan':
       return Icons.school;
+    case 'home':
+      return Icons.home;
+    case 'keluarga':
+      return Icons.groups;
+    case 'lainnya':
+      return Icons.category;
     default:
-      return Icons.category_outlined;
+      return Icons.category;
   }
 }
 

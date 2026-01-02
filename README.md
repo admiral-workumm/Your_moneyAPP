@@ -59,41 +59,48 @@ Aplikasi ini dirancang dengan antarmuka yang user friendly, dan mudah dipahami o
 ## 📊 **Backlog / Pembagian Tugas Tiap Anggota**
 
 Sprint 1 – Setup Project & Review Figma ( 17–23 Nov 2025 )
-| No | Fitur / Tugas | Penanggung Jawab | Status  |
+| No | Fitur / Tugas | Penanggung Jawab | Status |
 | -- | ------------- | ---------------- | ------- |
-| 1 | Memahami desain dan menyiapkan fondasi proyek  | Admiral,Riyo | ✔️ Done |
-| 2 | First README | Rafi             | ✔️ Done |
+| 1 | Memahami desain dan menyiapkan fondasi proyek | Admiral,Riyo | ✔️ Done |
+| 2 | First README | Rafi | ✔️ Done |
 
 Sprint 2 – Implementasi Layout UI ( 24–30 Nov 2025 )
-| No | Fitur / Tugas              | Penanggung Jawab | Status  |
+| No | Fitur / Tugas | Penanggung Jawab | Status |
 | -- | -------------------------- | ---------------- | ------- |
-| 3  | UI Splash Screen           | Admiral          | ✔️ Done |
-| 4  | UI Home Screen             | Admiral          | ✔️ Done |
-| 5  | UI Catatan Keuangan        | Admiral          | ✔️ Done |
-| 6  | UI Grafik                  | Admiral          | ✔️ Done |
-| 7  | UI Opsi                    | Rafi             | ✔️ Done |
-| 8  | UI Fitur Pengingat         | Rafi             | ✔️ Done |
-| 9  | UI Akun yang sudah ada     | Riyo             | ✔️ Done |
-| 10  | Update UI Card Total Saldo | Rafi             | ✔️ Done |
-| 11 | Update UI Grafik Screen    | Admiral          | ✔️ Done |
+| 3 | UI Splash Screen | Admiral | ✔️ Done |
+| 4 | UI Home Screen | Admiral | ✔️ Done |
+| 5 | UI Catatan Keuangan | Admiral | ✔️ Done |
+| 6 | UI Grafik | Admiral | ✔️ Done |
+| 7 | UI Opsi | Rafi | ✔️ Done |
+| 8 | UI Fitur Pengingat | Rafi | ✔️ Done |
+| 9 | UI Akun yang sudah ada | Riyo | ✔️ Done |
+| 10 | Update UI Card Total Saldo | Rafi | ✔️ Done |
+| 11 | Update UI Grafik Screen | Admiral | ✔️ Done |
 
 Sprint 3 – Interaktivitas & Navigasi ( 1–7 Des 2025 )
-| No | Fitur / Tugas                 | Penanggung Jawab | Status  |
+| No | Fitur / Tugas | Penanggung Jawab | Status |
 | -- | ----------------------------- | ---------------- | ------- |
-| 12 | Navigasi Logout               | Rio              | ✔️ Done |
-| 13 | Navigasi Opsi ke Pengingat    | Rafi             | ✔️ Done |
-| 14 | Update Navigasi Ganti Bulan   | Admiral          | ✔️ Done |
-| 15 | Navigasi Card Pengeluaran     | Rio              | ✔️ Done |
-| 16 | Navigasi Card Detail Kategori | Rafi             | ✔️ Done |
+| 12 | Navigasi Logout | Rio | ✔️ Done |
+| 13 | Navigasi Opsi ke Pengingat | Rafi | ✔️ Done |
+| 14 | Update Navigasi Ganti Bulan | Admiral | ✔️ Done |
+| 15 | Navigasi Card Pengeluaran | Rio | ✔️ Done |
+| 16 | Navigasi Card Detail Kategori | Rafi | ✔️ Done |
 
 Sprint 4 – Integrasi Logika Bisnis Awal ( 8–14 Des 2025 )
-| No | Fitur / Tugas                     | Penanggung Jawab | Status  |
+| No | Fitur / Tugas | Penanggung Jawab | Status |
 | -- | --------------------------------- | ---------------- | ------- |
 | 17 | Update Data Onboarding            | Admiral          | ✔️ Done |
-| 18 | Update Data Create Catatan & Card | Admiral          | ✔️ Done |
-| 19 | Update Data Fitur Pengingat       | Rafi             | ✔️ Done |
-| 20 | Update Data Fitur Anggaran       | Riyo             | ⏳ Progres |
+| 18 | Update Data Catatan dan Grafik    | Admiral          | ✔️ Done |
+| 19 | Update Data CRUD Pengingat       | Rafi             | ✔️ Done |
+| 20 | Update Data CRUD Anggaran        | Riyo             | ✔️ Done |
 
+Sprint 5 – Integrasi Backend / API ( 15–14 Des 2025 )
+| No | Fitur / Tugas                     | Penanggung Jawab | Status  |
+| -- | --------------------------------- | ---------------- | ------- |
+| 21 | Update Data Fitur Detail Kategori | Rafi             | ✔️ Done |
+| 22 | Update Eror Handling & Notif Pengingat    | Rafi          | ✔️ Done |
+| 23 | Update Eror Handling Anggaran | Riyo             | ✔️ Done |
+| 24 | Update Data Detail Anggaran        | Riyo             | ✔️ Done |
 
 ## 🚀 **Cara Menjalankan Aplikasi**
 
