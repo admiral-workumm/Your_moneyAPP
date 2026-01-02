@@ -4,6 +4,7 @@ import 'package:your_money/app/data/models/transaksi.dart';
 import 'package:your_money/app/data/services/transaksi_service.dart';
 import 'package:your_money/app/modules/home/controllers/home_controller.dart';
 import 'package:your_money/app/modules/Dompet/controllers/dompet_controller.dart';
+import 'package:your_money/app/modules/grafik/controllers/grafik_controller.dart';
 import 'package:your_money/app/routes/app_routes.dart';
 
 class CatatKeuanganController extends GetxController {
