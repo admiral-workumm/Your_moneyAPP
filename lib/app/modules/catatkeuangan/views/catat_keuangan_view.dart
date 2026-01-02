@@ -202,7 +202,15 @@ class _FormPengeluaran extends StatelessWidget {
           TextField(
             controller: controller.jumlahC,
             keyboardType: TextInputType.number,
-            decoration: decoration.copyWith(hintText: 'Masukan jumlah'),
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              controller.rupiahFormatter,
+            ],
+            style: const TextStyle(color: Colors.black),
+            decoration: decoration.copyWith(
+              hintText: 'Masukkan jumlah',
+              prefixText: 'Rp ',
+            ),
           ),
           const SizedBox(height: 16),
           Text('Keterangan', style: labelStyle),
@@ -214,25 +222,10 @@ class _FormPengeluaran extends StatelessWidget {
           const SizedBox(height: 16),
           Text('Jenis Dompet', style: labelStyle),
           const SizedBox(height: 8),
-          Obx(() {
-            final options = controller.dompetOptions;
-            final disabled = options.isEmpty;
-            return DropdownButtonFormField<String>(
-              value: disabled ? null : controller.jenisDompet.value,
-              items: options
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
-              onChanged:
-                  disabled ? null : (v) => controller.jenisDompet.value = v,
-              decoration: decoration.copyWith(
-                hintText: disabled
-                    ? 'Belum ada dompet, tambah dulu'
-                    : 'Pilih jenis dompet',
-                helperText: disabled ? 'Tambah dompet di halaman Dompet' : null,
-                suffixIcon: const Icon(Icons.arrow_drop_down),
-              ),
-            );
-          }),
+          _DompetPicker(
+            controller: controller,
+            decoration: decoration,
+          ),
           const SizedBox(height: 16),
           Text('Tanggal', style: labelStyle),
           const SizedBox(height: 8),
@@ -279,7 +272,15 @@ class _FormPemasukan extends StatelessWidget {
           TextField(
             controller: controller.jumlahC,
             keyboardType: TextInputType.number,
-            decoration: decoration.copyWith(hintText: 'Masukan jumlah'),
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              controller.rupiahFormatter,
+            ],
+            style: const TextStyle(color: Colors.black),
+            decoration: decoration.copyWith(
+              hintText: 'Masukkan jumlah',
+              prefixText: 'Rp ',
+            ),
           ),
           const SizedBox(height: 16),
           Text('Keterangan', style: labelStyle),
@@ -291,25 +292,10 @@ class _FormPemasukan extends StatelessWidget {
           const SizedBox(height: 16),
           Text('Jenis Dompet', style: labelStyle),
           const SizedBox(height: 8),
-          Obx(() {
-            final options = controller.dompetOptions;
-            final disabled = options.isEmpty;
-            return DropdownButtonFormField<String>(
-              value: disabled ? null : controller.jenisDompet.value,
-              items: options
-                  .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                  .toList(),
-              onChanged:
-                  disabled ? null : (v) => controller.jenisDompet.value = v,
-              decoration: decoration.copyWith(
-                hintText: disabled
-                    ? 'Belum ada dompet, tambah dulu'
-                    : 'Pilih jenis dompet',
-                helperText: disabled ? 'Tambah dompet di halaman Dompet' : null,
-                suffixIcon: const Icon(Icons.arrow_drop_down),
-              ),
-            );
-          }),
+          _DompetPicker(
+            controller: controller,
+            decoration: decoration,
+          ),
           const SizedBox(height: 16),
           Text('Tanggal', style: labelStyle),
           const SizedBox(height: 8),
@@ -403,8 +389,122 @@ class _KategoriGrid extends StatelessWidget {
   }
 }
 
+class _DompetPicker extends StatelessWidget {
+  const _DompetPicker({
+    required this.controller,
+    required this.decoration,
+  });
+
+  final CatatKeuanganController controller;
+  final InputDecoration decoration;
+
+  static const _blue = Color(0xFF1E88E5);
+  static const _hint = Colors.black54;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final options = controller.dompetOptions;
+      final disabled = options.isEmpty;
+      final selected = controller.jenisDompet.value ?? '';
+
+      final displayText = disabled
+          ? 'Belum ada dompet, tambah dulu'
+          : (selected.isEmpty ? 'Pilih jenis dompet' : selected);
+
+      return GestureDetector(
+        onTap: disabled ? null : () => _showDompetModal(context, controller),
+        child: InputDecorator(
+          decoration: decoration.copyWith(
+            suffixIcon: const Icon(Icons.arrow_drop_down),
+            helperText: disabled ? 'Tambah dompet di halaman Dompet' : null,
+          ),
+          isEmpty: selected.isEmpty,
+          child: Text(
+            displayText,
+            style: TextStyle(
+              color: disabled
+                  ? _hint
+                  : (selected.isEmpty ? _hint : Colors.black87),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+}
+
 class _Cat {
   final String key;
   final IconData icon;
   _Cat(this.key, this.icon);
+}
+
+void _showDompetModal(
+  BuildContext context,
+  CatatKeuanganController controller,
+) {
+  showDialog(
+    context: context,
+    builder: (_) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Colors.white,
+        title: const Text(
+          'Pilih Jenis Dompet',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: _DompetPicker._blue,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: Obx(() {
+          final options = controller.dompetOptions;
+          final selected = controller.jenisDompet.value;
+
+          if (options.isEmpty) {
+            return const SizedBox(
+              width: 260,
+              child: Text(
+                'Belum ada dompet. Tambahkan dompet terlebih dahulu.',
+                style: TextStyle(color: Colors.black54),
+                textAlign: TextAlign.center,
+              ),
+            );
+          }
+
+          return SizedBox(
+            width: 300,
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemBuilder: (context, index) {
+                final option = options[index];
+                final active = option == selected;
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    option,
+                    style: TextStyle(
+                      color: active ? _DompetPicker._blue : Colors.black87,
+                      fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
+                  trailing: active
+                      ? const Icon(Icons.check, color: _DompetPicker._blue)
+                      : null,
+                  onTap: () {
+                    controller.jenisDompet.value = option;
+                    Navigator.pop(context);
+                  },
+                );
+              },
+              separatorBuilder: (_, __) => const SizedBox(height: 4),
+              itemCount: options.length,
+            ),
+          );
+        }),
+      );
+    },
+  );
 }
