@@ -163,7 +163,6 @@ class CatatKeuanganController extends GetxController {
       print('[CatatKeuanganController] DompetController error: $e');
     }
 
-
     // Refresh Grafik controller jika sudah di-register
     try {
       if (Get.isRegistered<GrafikController>()) {
@@ -179,7 +178,6 @@ class CatatKeuanganController extends GetxController {
     // Delay navigasi sampai snackbar selesai (1.5 detik) supaya tidak conflict
     print('[CatatKeuanganController] Waiting for snackbar to finish...');
     await Future.delayed(const Duration(milliseconds: 1600));
-
 
     // Navigasi langsung ke HOME (bukan Get.back)
     print('[CatatKeuanganController] Navigating back to HOME...');
