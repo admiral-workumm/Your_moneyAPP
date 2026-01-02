@@ -125,35 +125,39 @@ class _GrafikViewState extends State<GrafikView> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      SmallChip(
-                        label: 'Pengeluaran',
-                        icon: Icons.shopping_bag_outlined,
-                        selected: chartType == ChartType.pengeluaran,
-                        onTap: () => setState(() {
-                          chartType = ChartType.pengeluaran;
-                        }),
-                      ),
-                      const SizedBox(width: 8),
-                      SmallChip(
-                        label: 'Pemasukan',
-                        icon: Icons.savings,
-                        selected: chartType == ChartType.pemasukan,
-                        onTap: () => setState(() {
-                          chartType = ChartType.pemasukan;
-                        }),
-                      ),
-                      const SizedBox(width: 8),
-                      SmallChip(
-                        label: 'Anggaran',
-                        icon: Icons.book,
-                        selected: chartType == ChartType.anggaran,
-                        onTap: () => setState(() {
-                          chartType = ChartType.anggaran;
-                        }),
-                      ),
-                    ],
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: [
+                        SmallChip(
+                          label: 'Pengeluaran',
+                          icon: Icons.shopping_bag_outlined,
+                          selected: chartType == ChartType.pengeluaran,
+                          onTap: () => setState(() {
+                            chartType = ChartType.pengeluaran;
+                          }),
+                        ),
+                        const SizedBox(width: 8),
+                        SmallChip(
+                          label: 'Pemasukan',
+                          icon: Icons.savings,
+                          selected: chartType == ChartType.pemasukan,
+                          onTap: () => setState(() {
+                            chartType = ChartType.pemasukan;
+                          }),
+                        ),
+                        const SizedBox(width: 8),
+                        SmallChip(
+                          label: 'Anggaran',
+                          icon: Icons.book,
+                          selected: chartType == ChartType.anggaran,
+                          onTap: () => setState(() {
+                            chartType = ChartType.anggaran;
+                          }),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

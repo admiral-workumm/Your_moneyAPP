@@ -1,24 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:your_money/app/routes/app_routes.dart';
+import 'package:your_money/app/data/categories.dart';
 
 class KategoriView extends StatelessWidget {
   const KategoriView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final categories = <_Category>[
-      _Category('Makan', Icons.restaurant),
-      _Category('Hiburan', Icons.sports_esports),
-      _Category('Transportasi', Icons.directions_bus),
-      _Category('Belanja', Icons.shopping_bag),
-      _Category('Komunikasi', Icons.smartphone),
-      _Category('Kesehatan', Icons.medical_services),
-      _Category('Pendidikan', Icons.school),
-      _Category('Home', Icons.home),
-      _Category('Keluarga', Icons.groups),
-      _Category('Lainnya', Icons.category),
-    ];
+    final categories = kDefaultCategories;
 
     // Use consistent primary blue like other screens (Opsi / Dompet)
     const Color accent = Color(0xFF1E88E5);
@@ -63,10 +53,4 @@ class KategoriView extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Category {
-  final String label;
-  final IconData icon;
-  const _Category(this.label, this.icon);
 }

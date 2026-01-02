@@ -3,13 +3,45 @@ import 'package:uuid/uuid.dart';
 import '../models/transaksi.dart';
 
 class TransaksiService {
-  static const String _transaksiKey = 'transaksi_list';
   final _box = GetStorage();
+
+  String _sanitizeId(String? value) {
+    final fallback = (value ?? '').trim();
+    if (fallback.isEmpty) return 'default';
+    final cleaned = fallback.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+    return cleaned.isEmpty ? 'default' : cleaned;
+  }
+
+  String get _transaksiKey {
+    try {
+      final current = _box.read('currentAccount');
+      if (current is Map) {
+        final book = current['bookName']?.toString();
+        final user = current['userName']?.toString();
+        final id = (book != null && book.trim().isNotEmpty)
+            ? book
+            : (user ?? 'default');
+        return 'transaksi_${_sanitizeId(id)}';
+      }
+    } catch (_) {}
+    return 'transaksi_default';
+  }
 
   /// Tambah transaksi baru
   Future<void> addTransaksi(Transaksi transaksi) async {
     try {
-      final List<dynamic> stored = _box.read(_transaksiKey) ?? [];
+      // Prefer per-account key. If empty, try migrating legacy global key.
+      List<dynamic> stored = _box.read(_transaksiKey) ?? [];
+      // Do not automatically migrate global legacy data into every new account.
+      // Only consider legacy key when we don't have a per-account context
+      if (stored.isEmpty && _transaksiKey == 'transaksi_default') {
+        final legacy = _box.read('transaksi_list');
+        if (legacy is List && legacy.isNotEmpty) {
+          stored = List<dynamic>.from(legacy);
+          await _box.write(_transaksiKey, stored);
+        }
+      }
+
       final transaksiWithId = transaksi.copyWith(
         id: transaksi.id.isEmpty ? const Uuid().v4() : transaksi.id,
       );
@@ -29,14 +61,25 @@ class TransaksiService {
   /// Ambil semua transaksi
   List<Transaksi> getAllTransaksi() {
     try {
-      final List<dynamic> stored = _box.read(_transaksiKey) ?? [];
-      print('[TransaksiService] Raw stored data: ${stored.length} items');
+      List<dynamic> stored = _box.read(_transaksiKey) ?? [];
+      print(
+          '[TransaksiService] Raw stored data (key ${_transaksiKey}): ${stored.length} items');
+
+      // Avoid showing legacy global transactions for newly created books.
+      // Only fallback to legacy when we have no account context.
+      if (stored.isEmpty && _transaksiKey == 'transaksi_default') {
+        final legacy = _box.read('transaksi_list');
+        if (legacy is List && legacy.isNotEmpty) {
+          stored = List<dynamic>.from(legacy);
+          print(
+              '[TransaksiService] Migrated ${legacy.length} items from legacy key');
+        }
+      }
 
       final result = <Transaksi>[];
       for (var item in stored) {
         try {
           if (item is Map) {
-            // Convert Map<dynamic, dynamic> ke Map<String, dynamic>
             final mapData = Map<String, dynamic>.from(item);
             result.add(Transaksi.fromMap(mapData));
             print(
@@ -159,6 +202,10 @@ class TransaksiService {
   Future<void> clearAllTransaksi() async {
     try {
       await _box.remove(_transaksiKey);
+      // Also remove legacy key if present
+      try {
+        await _box.remove('transaksi_list');
+      } catch (_) {}
     } catch (e) {
       print('Error clearing transaksi: $e');
     }

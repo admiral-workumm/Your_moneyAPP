@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:your_money/app/data/models/anggaran.dart';
+import 'package:your_money/app/data/categories.dart';
 import 'package:your_money/app/modules/anggaran/controllers/anggaran_controller.dart';
 
 class AnggaranView extends StatefulWidget {
@@ -14,6 +15,7 @@ class _AnggaranViewState extends State<AnggaranView> {
   final _nameCtrl = TextEditingController();
   final _amountCtrl = TextEditingController();
   final _categoryCtrl = TextEditingController();
+  String? _selectedCategory;
   final _dateCtrl = TextEditingController();
 
   String? _period; // Jenis Periode
@@ -96,7 +98,8 @@ class _AnggaranViewState extends State<AnggaranView> {
               try {
                 final name = _nameCtrl.text.trim();
                 final amountStr = _amountCtrl.text.replaceAll('.', '').trim();
-                final category = _categoryCtrl.text.trim();
+                final category =
+                    (_selectedCategory ?? _categoryCtrl.text).trim();
                 final period = _period ?? 'Bulanan';
                 final dateText = _dateCtrl.text.trim();
 
@@ -206,10 +209,16 @@ class _AnggaranViewState extends State<AnggaranView> {
             const SizedBox(height: 16),
             const Text('Kategori'),
             const SizedBox(height: 8),
-            TextField(
-              controller: _categoryCtrl,
+            // Use shared category list via dropdown but keep TextField as fallback
+            DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              items: kDefaultCategories
+                  .map((c) =>
+                      DropdownMenuItem(value: c.label, child: Text(c.label)))
+                  .toList(),
+              onChanged: (v) => setState(() => _selectedCategory = v),
               decoration:
-                  _inputDecoration('Masukan Kategori', isError: _categoryError),
+                  _inputDecoration('Pilih Kategori', isError: _categoryError),
             ),
             const SizedBox(height: 16),
             const Text('Jenis Periode'),
