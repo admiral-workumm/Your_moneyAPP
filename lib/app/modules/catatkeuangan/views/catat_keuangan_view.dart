@@ -341,17 +341,18 @@ class _KategoriGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Susunan ikon mengikuti screenshot: 3 kolom x 3 (bisa diubah sesuai kebutuhan)
+    // Susunan ikon mengikuti kategori yang sesuai
     final items = <_Cat>{
       _Cat('Makan', Icons.restaurant),
-      _Cat('Game', Icons.sports_esports),
-      _Cat('Hadiah', Icons.card_giftcard),
-      _Cat('Minuman', Icons.local_cafe),
-      _Cat('Transport', Icons.directions_bus),
-      _Cat('Gadget', Icons.smartphone),
-      _Cat('Pribadi', Icons.person_outline),
+      _Cat('Hiburan', Icons.sports_esports),
+      _Cat('Transportasi', Icons.directions_bus),
+      _Cat('Belanja', Icons.shopping_bag),
+      _Cat('Komunikasi', Icons.smartphone),
+      _Cat('Kesehatan', Icons.medical_services),
       _Cat('Pendidikan', Icons.school),
-      _Cat('Lainnya', Icons.category_outlined),
+      _Cat('Home', Icons.home),
+      _Cat('Keluarga', Icons.groups),
+      _Cat('Lainnya', Icons.category),
     }.toList();
 
     return Obx(() {

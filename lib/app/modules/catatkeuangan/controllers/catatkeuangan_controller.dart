@@ -216,6 +216,7 @@ class CatatKeuanganController extends GetxController {
         backgroundColor: Colors.green.withOpacity(0.9),
         colorText: Colors.white,
         snackPosition: SnackPosition.TOP,
+        duration: const Duration(milliseconds: 1500),
       );
     }
 
@@ -232,7 +233,6 @@ class CatatKeuanganController extends GetxController {
       print('[CatatKeuanganController] HomeController error: $e');
     }
 
-    // Refresh DompetController jika ada
     try {
       if (Get.isRegistered<DompetController>()) {
         final dompetController = Get.find<DompetController>();

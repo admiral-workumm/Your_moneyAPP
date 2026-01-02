@@ -1068,22 +1068,26 @@ IconData _getIconForKategori(String kategori) {
   switch (kategori.toLowerCase()) {
     case 'makan':
       return Icons.restaurant;
-    case 'game':
+    case 'hiburan':
       return Icons.sports_esports;
-    case 'hadiah':
-      return Icons.card_giftcard;
-    case 'minuman':
-      return Icons.local_cafe;
-    case 'transport':
+    case 'transportasi':
       return Icons.directions_bus;
-    case 'gadget':
+    case 'belanja':
+      return Icons.shopping_bag;
+    case 'komunikasi':
       return Icons.smartphone;
-    case 'pribadi':
-      return Icons.person_outline;
+    case 'kesehatan':
+      return Icons.medical_services;
     case 'pendidikan':
       return Icons.school;
+    case 'home':
+      return Icons.home;
+    case 'keluarga':
+      return Icons.groups;
+    case 'lainnya':
+      return Icons.category;
     default:
-      return Icons.category_outlined;
+      return Icons.category;
   }
 }
 
@@ -1106,83 +1110,86 @@ class _TransactionListBuilder extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
-    final transaksi = controller.transaksiList;
+    return Obx(() {
+      final transaksi = controller.transaksiList;
 
-    if (transaksi.isEmpty) {
-      return ListView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-        children: const [
-          SizedBox(height: 40),
-          Center(
-            child: Text(
-              'Tidak ada transaksi',
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 14,
+      if (transaksi.isEmpty) {
+        return ListView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+          children: const [
+            SizedBox(height: 40),
+            Center(
+              child: Text(
+                'Tidak ada transaksi',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 14,
+                ),
               ),
             ),
-          ),
-        ],
-      );
-    }
-
-    // Group transaksi berdasarkan tanggal
-    Map<String, List<dynamic>> groupedByDate = {};
-    for (var t in transaksi) {
-      final date = t.tanggal;
-      if (!groupedByDate.containsKey(date)) {
-        groupedByDate[date] = [];
-      }
-      groupedByDate[date]!.add(t);
-    }
-
-    // Sort tanggal descending
-    final sortedDates = groupedByDate.keys.toList()
-      ..sort((a, b) => b.compareTo(a));
-
-    return ListView.separated(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-      itemCount: sortedDates.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final date = sortedDates[index];
-        final dayTransaksi = groupedByDate[date]!;
-
-        // Hitung total pengeluaran per hari
-        int totalPengeluaran = 0;
-        for (var t in dayTransaksi) {
-          if (t.tipe == 'pengeluaran') {
-            totalPengeluaran += int.tryParse(t.jumlah.replaceAll('.', '')) ?? 0;
-          }
-        }
-
-        // Format tanggal
-        final dateObj = DateTime.parse(date);
-        final dayName = _getDayName(dateObj.weekday);
-        final dateStr =
-            '${dayName.substring(0, 3)}, ${dateObj.day}/${dateObj.month}';
-
-        return _TransactionGroup(
-          headerLeft: dateStr,
-          headerRight: totalPengeluaran > 0
-              ? 'Pengeluaran : Rp${_formatRupiah(totalPengeluaran.toString())}'
-              : '',
-          items: dayTransaksi
-              .map((t) => _TxnTile(
-                    icon: _getIconForKategori(t.kategori),
-                    title: t.kategori.toUpperCase(),
-                    subtitle: t.keterangan,
-                    amount:
-                        '${t.tipe == 'pengeluaran' ? '-' : '+'}Rp${_formatRupiah(t.jumlah)}',
-                    bank: t.jenisDompet,
-                    transaksi: t, // Pass transaksi object untuk edit/delete
-                  ))
-              .toList(),
+          ],
         );
-      },
-    );
+      }
+
+      // Group transaksi berdasarkan tanggal
+      Map<String, List<dynamic>> groupedByDate = {};
+      for (var t in transaksi) {
+        final date = t.tanggal;
+        if (!groupedByDate.containsKey(date)) {
+          groupedByDate[date] = [];
+        }
+        groupedByDate[date]!.add(t);
+      }
+
+      // Sort tanggal descending
+      final sortedDates = groupedByDate.keys.toList()
+        ..sort((a, b) => b.compareTo(a));
+
+      return ListView.separated(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+        itemCount: sortedDates.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final date = sortedDates[index];
+          final dayTransaksi = groupedByDate[date]!;
+
+          // Hitung total pengeluaran per hari
+          int totalPengeluaran = 0;
+          for (var t in dayTransaksi) {
+            if (t.tipe == 'pengeluaran') {
+              totalPengeluaran +=
+                  int.tryParse(t.jumlah.replaceAll('.', '')) ?? 0;
+            }
+          }
+
+          // Format tanggal
+          final dateObj = DateTime.parse(date);
+          final dayName = _getDayName(dateObj.weekday);
+          final dateStr =
+              '${dayName.substring(0, 3)}, ${dateObj.day}/${dateObj.month}';
+
+          return _TransactionGroup(
+            headerLeft: dateStr,
+            headerRight: totalPengeluaran > 0
+                ? 'Pengeluaran : Rp${_formatRupiah(totalPengeluaran.toString())}'
+                : '',
+            items: dayTransaksi
+                .map((t) => _TxnTile(
+                      icon: _getIconForKategori(t.kategori),
+                      title: t.kategori.toUpperCase(),
+                      subtitle: t.keterangan,
+                      amount:
+                          '${t.tipe == 'pengeluaran' ? '-' : '+'}Rp${_formatRupiah(t.jumlah)}',
+                      bank: t.jenisDompet,
+                      transaksi: t, // Pass transaksi object untuk edit/delete
+                    ))
+                .toList(),
+          );
+        },
+      );
+    });
   }
 
   String _getDayName(int weekday) {
