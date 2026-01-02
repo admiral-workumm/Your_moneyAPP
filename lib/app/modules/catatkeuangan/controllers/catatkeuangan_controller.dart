@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:your_money/app/data/models/transaksi.dart';
 import 'package:your_money/app/data/services/transaksi_service.dart';
+import 'package:your_money/app/data/services/budget_notification_service.dart';
 import 'package:your_money/app/modules/home/controllers/home_controller.dart';
 import 'package:your_money/app/modules/Dompet/controllers/dompet_controller.dart';
 import 'package:your_money/app/modules/grafik/controllers/grafik_controller.dart';
@@ -27,6 +28,9 @@ class CatatKeuanganController extends GetxController {
   // Service untuk menyimpan transaksi
   final _transaksiService = TransaksiService();
 
+  // Service untuk notifikasi anggaran
+  final _budgetNotificationService = BudgetNotificationService();
+
   // Mode edit
   var editingTransaksi = Rxn<Transaksi>();
 
@@ -40,32 +44,71 @@ class CatatKeuanganController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    if (Get.isRegistered<DompetController>()) {
-      _dompetController = Get.find<DompetController>();
-      ever<List<WalletItem>>(_dompetController!.wallets, (_) {
-        _syncDompetOptions();
-      });
-      _syncDompetOptions();
-    }
+    _initDompetController();
     // Reset form setiap kali buka (jika tidak dalam edit mode)
     if (editingTransaksi.value == null) {
       _resetForm();
     }
   }
 
+  @override
+  void onReady() {
+    super.onReady();
+    // Re-sync dompet options saat view sudah ready
+    _syncDompetOptions();
+    print('[CatatKeuanganController] onReady - re-synced dompet options');
+  }
+
+  void _initDompetController() {
+    try {
+      if (Get.isRegistered<DompetController>()) {
+        _dompetController = Get.find<DompetController>();
+        print('[CatatKeuanganController] DompetController found, syncing...');
+
+        // Setup listener untuk perubahan wallets
+        ever<List<WalletItem>>(_dompetController!.wallets, (_) {
+          print('[CatatKeuanganController] Wallets changed, re-syncing...');
+          _syncDompetOptions();
+        });
+
+        // Sync dompet options saat inisialisasi
+        _syncDompetOptions();
+        print(
+            '[CatatKeuanganController] Initial sync completed. Options: ${dompetOptions.length}');
+      } else {
+        print(
+            '[CatatKeuanganController] WARNING: DompetController not registered!');
+      }
+    } catch (e) {
+      print(
+          '[CatatKeuanganController] Error initializing DompetController: $e');
+    }
+  }
+
   void _syncDompetOptions() {
     final source = _dompetController?.wallets ?? <WalletItem>[];
+    print('[CatatKeuanganController] Syncing from ${source.length} wallets');
+
     final active = source.where((w) => (w.active ?? true)).toList();
+    print('[CatatKeuanganController] ${active.length} active wallets found');
+
     dompetOptions.assignAll(active.map((w) => w.name));
     _dompetNameToId
       ..clear()
       ..addAll({for (final w in active) w.name: w.id});
 
+    print('[CatatKeuanganController] Options updated: $dompetOptions');
+
     if (dompetOptions.isEmpty) {
       jenisDompet.value = null;
-    } else if (jenisDompet.value != null &&
+      print(
+          '[CatatKeuanganController] No wallets available, setting jenisDompet to null');
+    } else if (jenisDompet.value == null ||
         !dompetOptions.contains(jenisDompet.value)) {
+      // Auto-select first wallet if none selected or current selection invalid
       jenisDompet.value = dompetOptions.first;
+      print(
+          '[CatatKeuanganController] Auto-selected first wallet: ${jenisDompet.value}');
     }
   }
 
@@ -207,6 +250,13 @@ class CatatKeuanganController extends GetxController {
       return;
     }
 
+    // Auto-select first wallet if none selected
+    if (jenisDompet.value == null && dompetOptions.isNotEmpty) {
+      jenisDompet.value = dompetOptions.first;
+      print(
+          '[CatatKeuanganController] Auto-selected wallet before save: ${jenisDompet.value}');
+    }
+
     // Validasi sederhana
     if (jumlahC.text.isEmpty ||
         ketC.text.isEmpty ||
@@ -288,6 +338,10 @@ class CatatKeuanganController extends GetxController {
       // Simpan ke local storage (await untuk memastikan selesai)
       await _transaksiService.addTransaksi(transaksi);
       print('[CatatKeuanganController] Transaction saved successfully');
+
+      // Cek dan tampilkan notifikasi anggaran (SETIAP KALI transaksi disimpan)
+      await _budgetNotificationService.checkAndNotify();
+      print('[CatatKeuanganController] Budget notification check completed');
 
       // Update saldo dompet langsung
       try {

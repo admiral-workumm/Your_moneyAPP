@@ -408,6 +408,12 @@ class _DompetPicker extends StatelessWidget {
       final disabled = options.isEmpty;
       final selected = controller.jenisDompet.value ?? '';
 
+      // Debug logging
+      print('[_DompetPicker] Options count: ${options.length}');
+      print('[_DompetPicker] Options: $options');
+      print('[_DompetPicker] Selected: $selected');
+      print('[_DompetPicker] Disabled: $disabled');
+
       final displayText = disabled
           ? 'Belum ada dompet, tambah dulu'
           : (selected.isEmpty ? 'Pilih jenis dompet' : selected);

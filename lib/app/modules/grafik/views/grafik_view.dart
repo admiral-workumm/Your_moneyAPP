@@ -475,6 +475,12 @@ class _BudgetCard extends StatelessWidget {
                 final pct = budget.progress.clamp(0, 1);
                 final barWidth = c.maxWidth;
                 final filled = barWidth * pct;
+
+                // Tentukan warna teks berdasarkan posisi progress
+                final currentColor = pct > 0.1 ? Colors.white : Colors.black87;
+                final percentColor = pct > 0.5 ? Colors.white : Colors.black87;
+                final limitColor = pct > 0.85 ? Colors.white : Colors.black87;
+
                 return Stack(
                   alignment: Alignment.center,
                   children: [
@@ -501,8 +507,8 @@ class _BudgetCard extends StatelessWidget {
                       child: Row(
                         children: [
                           Text('Rp ${_fmt(budget.current)}',
-                              style: const TextStyle(
-                                  color: Colors.white,
+                              style: TextStyle(
+                                  color: currentColor,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600)),
                           const Spacer(),
@@ -514,13 +520,17 @@ class _BudgetCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text('${(pct * 100).round()}%',
-                                style: const TextStyle(
-                                    fontSize: 12, fontWeight: FontWeight.w600)),
+                                style: TextStyle(
+                                    color: percentColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600)),
                           ),
                           const Spacer(),
                           Text('Rp ${_fmt(budget.limit)}',
-                              style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w600)),
+                              style: TextStyle(
+                                  color: limitColor,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
