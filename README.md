@@ -46,7 +46,7 @@ Aplikasi ini dirancang dengan antarmuka yang user friendly, dan mudah dipahami o
 
 ## 📄 **Worksheet (Dokumen Analisis & Requirement)**
 
-👉 _(Tempel link Worksheet di sini)_
+👉 _[link Worksheet di sini](https://github.com/admiral-workumm/Your_moneyAPP/blob/main/Worksheet%20Rekayasa%20Interaksi%20.pdf)_
 
 ---
 
@@ -94,13 +94,29 @@ Sprint 4 – Integrasi Logika Bisnis Awal ( 8–14 Des 2025 )
 | 19 | Update Data CRUD Pengingat       | Rafi             | ✔️ Done |
 | 20 | Update Data CRUD Anggaran        | Riyo             | ✔️ Done |
 
-Sprint 5 – Integrasi Backend / API ( 15–14 Des 2025 )
+Sprint 5 – Integrasi Backend / API ( 15–21 Des 2025 )
 | No | Fitur / Tugas                     | Penanggung Jawab | Status  |
 | -- | --------------------------------- | ---------------- | ------- |
 | 21 | Update Data Fitur Detail Kategori | Rafi             | ✔️ Done |
 | 22 | Update Eror Handling & Notif Pengingat    | Rafi          | ✔️ Done |
 | 23 | Update Eror Handling Anggaran | Riyo             | ✔️ Done |
 | 24 | Update Data Detail Anggaran        | Riyo             | ✔️ Done |
+
+Sprint 6 – Testing & Debugging ( 22–28 Des 2025 )
+| No | Fitur / Tugas                     | Penanggung Jawab | Status  |
+| -- | --------------------------------- | ---------------- | ------- |
+| 25 | Update Bug UI & Data Dompet  | Rafi             | ✔️ Done |
+| 26 | Update Bug Data Pemasukan & UI Detail Kategori   | Rafi          | ✔️ Done |
+| 27 | Update Bug Chart Donut pada Page Grafik| Rafi             | ✔️ Done |
+| 28 | Update Bug Catat Keuangan       | Rafi             | ✔️ Done |
+| 29 | Update Bug Anggaran       | Rafi             | ✔️ Done |
+| 30 | Perbaikan Responsive    | Admiral           | ✔️ Done |
+
+Sprint 7 – Demo & Evaluasi Akhir ( 29 Des – 2 Jan 2025 )
+| No | Fitur / Tugas                     | Penanggung Jawab | Status  |
+| -- | --------------------------------- | ---------------- | ------- |
+| 31 | Realease APK  | Admiral             | ✔️ Done |
+| 32 | Penyesuaian Readme | Riyo             | ✔️ Done |
 
 ## 🚀 **Cara Menjalankan Aplikasi**
 
